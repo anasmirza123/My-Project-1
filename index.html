@@ -1092,7 +1092,8 @@
       .sidebar-footer { display: none; }
       .main-workspace { padding: 18px 16px; }
     }
-  </style>
+  .kebab{position:relative;display:inline-block}.kebab summary{list-style:none;cursor:pointer;padding:2px 9px;border-radius:6px;font-size:18px}.kebab summary::-webkit-details-marker{display:none}.kebab[open] summary{background:#e5e7eb}.kmenu{position:absolute;right:0;z-index:30;background:#fff;border:1px solid #d1d5db;border-radius:8px;min-width:175px;box-shadow:0 6px 18px #0002;padding:4px}.kmenu a,.kmenu button{display:block;width:100%;text-align:left;padding:7px 10px;border:0;background:none;font:inherit;cursor:pointer;color:inherit;text-decoration:none;border-radius:6px}.kmenu a:hover,.kmenu button:hover{background:#f3f4f6}.fu-card{flex:1;min-width:150px;padding:12px 14px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;text-decoration:none;color:inherit}.fu-card b{display:block;font-size:24px}
+    </style>
 </head>
 <body>
   <div class="app-container">
@@ -1157,6 +1158,8 @@
         <div class="sidebar-section-title">Manage</div>
         <a href="#/add-customer" class="nav-item" data-nav="add-customer"><span class="nav-item-left"><span class="nav-icon">＋</span> Add Customer</span></a>
         <a href="#/categories" class="nav-item" data-nav="categories"><span class="nav-item-left"><span class="nav-icon">▣</span> Customer Categories</span></a>
+        <a href="#/followups" class="nav-item" data-nav="followups"><span class="nav-item-left"><span class="nav-icon">⏰</span> Follow-ups</span></a>
+        <a href="#/purchases" class="nav-item" data-nav="purchases"><span class="nav-item-left"><span class="nav-icon">🛒</span> Purchase History</span></a>
         <a href="#/payments" class="nav-item" data-nav="payments"><span class="nav-item-left"><span class="nav-icon">₨</span> Payments</span></a>
         <a href="#/expenses" class="nav-item" data-nav="expenses"><span class="nav-item-left"><span class="nav-icon">⊖</span> Expenses</span></a>
         <a href="#/reports" class="nav-item" data-nav="reports"><span class="nav-item-left"><span class="nav-icon">▥</span> Reports &amp; Analytics</span></a>
@@ -1278,7 +1281,9 @@
         try { payload = await response.json(); } catch (_) { payload = null; }
       }
       if (!response.ok) {
-        const errorMsg = (payload && payload.error) || `Request error (${response.status})`;
+        const errorMsg = (payload && payload.error) || (payload === null
+          ? `Request error (${response.status}) for ${(options.method || 'GET')} ${API_BASE + endpoint}: the reply was not JSON from the Anas server. The page is probably not opened through the app server (use start.bat, then http://localhost:3000) or another program is using this port. Run "npm run diagnose" for details.`
+          : `Request error (${response.status})`);
         throw Object.assign(new Error(errorMsg), { status: response.status, data: payload });
       }
       return payload;
@@ -1773,8 +1778,8 @@
                   <th>Tracking ID</th>
                   <th>Payment Status</th>
                   <th>Purchasing / Product</th>
-                  <th class="col-right">Amount Received</th>
-                  <th class="col-right">Purchase Cost</th>
+                  <th class="col-right">Amount (Customer ne diya)</th>
+                  <th class="col-right">Khareed (Hamari Cost)</th>
                   <th>Address</th>
                   <th>Actions</th>
                 </tr>
@@ -1833,7 +1838,7 @@
                             Profit: ${fmtMoney(o.estimated_gross_profit_minor, o.currency)} ${o.profit_margin_percent != null ? `(${o.profit_margin_percent}%)` : ''}
                           </div>
                         ` : ''}
-                      ` : `<span style="color:var(--muted); font-size:12px;">Not Added</span>`}
+                      ` : `<span style="color:var(--muted); font-size:12px;">Cost not entered</span>`}
                     </td>
 
                     <!-- 9. Address -->
@@ -2271,9 +2276,10 @@
         btn.textContent = 'Updating…';
 
         try {
-          await apiRequest(`/orders/${orderId}/status`, { method: 'POST', body });
+          const updOrd = await apiRequest(`/orders/${orderId}/status`, { method: 'POST', body });
           closeModal();
           showToast(`Order #${orderId} status changed to ${body.status} ✓`, 'success');
+          if (body.status === 'completed') setTimeout(() => showCompletionPrompt(orderId, updOrd), 250);
           updateSidebarCounts();
           if (location.hash === '#/register') renderOrderRegister();
           else if (location.hash.startsWith('#/order/')) renderOrderDetail(orderId);
@@ -3746,7 +3752,7 @@
         navKey = 'hardware';
       } else if (segments[0] === 'settings') {
         navKey = 'settings';
-      } else if (['payments','expenses','activity','reports','categories','add-customer','business-settings'].includes(segments[0])) {
+      } else if (['followups','purchases','payments','expenses','activity','reports','categories','add-customer','business-settings'].includes(segments[0])) {
         navKey = segments[0];
       }
 
@@ -3754,7 +3760,7 @@
       updateSidebarCounts();
 
       if (segments.length === 0) {
-        return await renderDashboard();
+        await renderDashboard(); return await addFollowupDashboardPanel();
       }
 
       const rootSegment = segments[0];
@@ -3780,6 +3786,8 @@
           return await renderHardwareList();
         case 'settings':
           return await renderSettings();
+        case 'followups': return await renderFollowupsPage();
+        case 'purchases': return await renderPurchasesPage();
         case 'payments': return await renderPaymentsPage();
         case 'expenses': return await renderExpensesPage();
         case 'activity': return await renderActivityPage();
@@ -3788,10 +3796,89 @@
         case 'add-customer': return renderAddCustomerPage();
         case 'business-settings': return await renderBusinessSettings();
         default:
-          return await renderDashboard();
+          await renderDashboard(); return await addFollowupDashboardPanel();
       }
     }
 
+
+    /* ===== v1.3.0 Follow-ups, Next Visit, completion workflow, purchase history ===== */
+    const FU_TYPES = ['Next Visit', 'New Order', 'Payment Collection', 'Product Requirement', 'Customer Check-in', 'Delivery Follow-up', 'Other'];
+    const FU_BADGE = { overdue: ['Overdue', '#dc2626'], due_today: ['Due Today', '#d97706'], upcoming: ['Scheduled', '#2563eb'], completed: ['Completed', '#059669'], cancelled: ['Cancelled', '#6b7280'] };
+    const fuBadge = (f) => { const m = FU_BADGE[f.state] || [f.state, '#6b7280']; return `<span style="background:${m[1]}22;color:${m[1]};padding:2px 8px;border-radius:99px;font-size:12px;font-weight:600">${m[0]}</span>${f.status === 'rescheduled' ? `<div style="font-size:11px;color:var(--muted)">rescheduled ×${f.reschedule_count}</div>` : ''}`; };
+    function openFollowupForm(pre = {}) {
+      const nxt = pre.type === 'Next Visit';
+      openModal(`<h3 style="margin:0 0 10px">${nxt ? 'Schedule Next Visit' : 'New Follow-up'}</h3>
+        ${pre.customer_id ? '' : '<label>Customer phone number<input id="fu_phone" type="tel" placeholder="Saved customer\'s phone"></label>'}
+        <label>Date <input id="fu_date" type="date" required></label> <label>Time (optional) <input id="fu_time" type="time"></label>
+        <label>Type <select id="fu_type">${FU_TYPES.map(t => `<option ${t === (pre.type || 'Next Visit') ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
+        <label>Purpose <input id="fu_purpose" maxlength="500" style="width:100%"></label><label>Notes <textarea id="fu_notes" rows="2" style="width:100%"></textarea></label>
+        <div style="margin-top:12px;display:flex;gap:8px"><button class="btn btn-primary" id="fuSave">Save follow-up</button><button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>`);
+      document.getElementById('fuSave').onclick = async () => {
+        const g = (i) => document.getElementById(i).value.trim(), btn = document.getElementById('fuSave'); btn.disabled = true;
+        try {
+          let cid = pre.customer_id;
+          if (!cid) { const ph = g('fu_phone'); if (!ph) throw new Error('Enter the customer phone number'); const r = await apiRequest('/customers?search=' + encodeURIComponent(ph) + '&limit=1'); const rows = r.rows || r.customers || r; if (!rows || !rows.length) throw new Error('No saved customer with that phone number. Save the customer first.'); cid = rows[0].id; }
+          await apiRequest('/followups', { method: 'POST', body: { customer_id: cid, order_id: pre.order_id || null, follow_up_date: g('fu_date'), follow_up_time: g('fu_time') || null, type: g('fu_type'), purpose: g('fu_purpose'), notes: g('fu_notes') } });
+          closeModal(); showToast('Follow-up saved ✓', 'success'); if (location.hash.startsWith('#/followups')) renderFollowupsPage();
+        } catch (e) { showToast(e.message, 'error'); btn.disabled = false; }
+      };
+    }
+    function showCompletionPrompt(orderId, upd) {
+      const o = (upd && (upd.order || upd)) || {}, cid = o.customer_id;
+      openModal(`<h3 style="margin:0 0 6px">Order completed ✓</h3><p style="margin:0 0 12px">This order is now in the customer’s purchase history (counted once). Payment status was not changed. What next?</p>
+        <div style="display:grid;gap:8px"><button class="btn btn-primary" id="pcVisit">Schedule Next Visit</button><button class="btn btn-ghost" id="pcFu">Create a follow-up (payment, new order…)</button>
+        ${cid ? `<a class="btn btn-ghost" href="#/customer/${cid}" onclick="closeModal()">Return to customer profile</a>` : ''}<a class="btn btn-ghost" href="#/order/${orderId}" onclick="closeModal()">Open completed order</a>
+        <a class="btn btn-ghost" href="#/purchases" onclick="closeModal()">View purchase history</a><button class="btn btn-ghost" onclick="closeModal()">Skip — no visit needed</button></div>`);
+      document.getElementById('pcVisit').onclick = () => openFollowupForm({ customer_id: cid, order_id: orderId, type: 'Next Visit' });
+      document.getElementById('pcFu').onclick = () => openFollowupForm({ customer_id: cid, order_id: orderId, type: 'Payment Collection' });
+    }
+    async function renderFollowupsPage() {
+      const qp = new URLSearchParams((location.hash.split('?')[1]) || ''); const st = { state: qp.get('state') || 'active', search: '' }; let timer;
+      shell('Follow-ups', 'Next visits, payment collection and customer check-ins.', '<button class="btn btn-primary" id="fuNew">+ New follow-up</button>',
+        `<div class="toolbar"><select id="fuState" aria-label="State">${[['active', 'All active'], ['due_today', 'Due today'], ['overdue', 'Overdue'], ['upcoming', 'Upcoming'], ['completed', 'Completed'], ['cancelled', 'Cancelled'], ['all', 'Everything']].map(([v, l]) => `<option value="${v}" ${v === st.state ? 'selected' : ''}>${l}</option>`).join('')}</select>
+        <input type="search" id="fuSearch" placeholder="Search name, phone, tracking ID, purpose…"></div><div class="panel"><div id="fuBox" style="padding:8px">Loading…</div></div>`);
+      const box = document.getElementById('fuBox'); let rows = [];
+      async function load() {
+        try {
+          const r = await apiRequest(`/followups?state=${st.state}&search=${encodeURIComponent(st.search)}&limit=100`); rows = r.rows;
+          box.innerHTML = tbl(['Customer', 'Previous purchase', 'Paid / Balance', 'Next visit', 'Type / Purpose', 'Status', ''], rows.map(f => {
+            const open = f.status === 'scheduled' || f.status === 'rescheduled';
+            return `<tr><td>${who(f)}</td><td>${f.tracking_id ? `<a href="#/order/${f.order_id}" style="font-weight:700">${esc(f.tracking_id)}</a><div style="font-size:12px;color:var(--muted)">${esc((f.order_completed_at || '').slice(0, 10))}</div>` : '—'}</td>
+            <td class="tabular-nums">${f.amount_paid_minor == null ? '—' : esc(fmtMoney(f.amount_paid_minor)) + '<div style="font-size:12px;color:var(--muted)">Balance ' + esc(fmtMoney(f.balance_minor)) + '</div>'}</td>
+            <td class="tabular-nums">${esc(f.follow_up_date)}${f.follow_up_time ? ' ' + esc(f.follow_up_time) : ''}</td><td>${esc(f.type)}<div style="font-size:12px;color:var(--muted)">${esc(f.purpose || '')}</div></td><td>${fuBadge(f)}</td>
+            <td><details class="kebab"><summary aria-label="Actions">⋮</summary><div class="kmenu">${open ? `<a href="tel:${esc(f.customer_phone)}">📞 Call (opens phone app)</a>` : ''}<a href="#/customer/${f.customer_id}">Open customer profile</a>
+            ${f.order_id ? `<a href="#/order/${f.order_id}">View previous order</a>` : ''}${open && f.order_id && f.balance_minor > 0 ? `<a href="#/order/${f.order_id}">Record payment</a>` : ''}
+            ${open ? `<button data-act="reschedule" data-id="${f.id}">Reschedule</button><button data-act="complete" data-id="${f.id}">Mark follow-up complete</button><button data-act="cancel" data-id="${f.id}">Cancel follow-up</button>` : ''}</div></details></td></tr>`;
+          }).join(''), 'No follow-ups match this view.');
+        } catch (e) { box.innerHTML = `<div class="empty-state"><div class="empty-state-title">Could not load: ${esc(e.message)}</div></div>`; }
+      }
+      document.getElementById('fuState').onchange = (e) => { st.state = e.target.value; load(); };
+      document.getElementById('fuSearch').oninput = (e) => { clearTimeout(timer); timer = setTimeout(() => { st.search = e.target.value.trim(); load(); }, 300); };
+      document.getElementById('fuNew').onclick = () => openFollowupForm({});
+      box.onclick = async (e) => {
+        const b = e.target.closest('button[data-act]'); if (!b) return; const id = b.dataset.id, act = b.dataset.act;
+        try {
+          if (act === 'reschedule') { openModal(`<h3 style="margin:0 0 10px">Reschedule</h3><label>New date <input id="rs_d" type="date"></label> <label>Time <input id="rs_t" type="time"></label><div style="margin-top:12px"><button class="btn btn-primary" id="rsGo">Save</button> <button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>`);
+            document.getElementById('rsGo').onclick = async () => { try { await apiRequest(`/followups/${id}/reschedule`, { method: 'POST', body: { follow_up_date: document.getElementById('rs_d').value, follow_up_time: document.getElementById('rs_t').value || null } }); closeModal(); showToast('Rescheduled ✓', 'success'); load(); } catch (er) { showToast(er.message, 'error'); } }; return; }
+          if (!confirm(act === 'complete' ? 'Mark this follow-up as completed?' : 'Cancel this follow-up?')) return;
+          await apiRequest(`/followups/${id}/${act}`, { method: 'POST', body: {} }); showToast(act === 'complete' ? 'Follow-up completed ✓' : 'Follow-up cancelled', 'success'); load();
+        } catch (er) { showToast(er.message, 'error'); }
+      };
+      load();
+    }
+    async function addFollowupDashboardPanel() {
+      const root = document.getElementById('app-root'); if (!root) return;
+      try {
+        const d = await apiRequest('/dashboard/followups'); const c = (l, n, s, col) => `<a class="fu-card" href="#/followups?state=${s}" style="border-left:4px solid ${col}"><b>${n}</b>${l}</a>`;
+        const li = (arr, label) => arr.length ? `<div style="margin-top:8px"><strong>${label}</strong>${arr.map(f => `<div style="font-size:13px">${esc(f.customer_name || 'Name not added')} · ${esc(f.customer_phone)} · ${esc(f.follow_up_date)} · ${esc(f.type)}</div>`).join('')}</div>` : '';
+        root.insertAdjacentHTML('beforeend', `<div class="panel" style="padding:14px;margin-top:14px"><h3 style="margin:0 0 10px">Follow-ups</h3><div style="display:flex;gap:10px;flex-wrap:wrap">${c('Overdue', d.overdue, 'overdue', '#dc2626')}${c('Due today', d.due_today, 'due_today', '#d97706')}${c('Upcoming', d.upcoming, 'upcoming', '#2563eb')}${c('Customers needing follow-up', d.customers_needing_followup, 'active', '#7c3aed')}</div>${li(d.lists.overdue, 'Overdue')}${li(d.lists.due_today, 'Today’s visits')}</div>`);
+      } catch (e) { root.insertAdjacentHTML('beforeend', `<div class="alert-banner error">Follow-up summary failed: ${esc(e.message)}</div>`); }
+    }
+    function renderPurchasesPage() {
+      return listPage({ title: 'Purchase History', desc: 'Every completed order, one row per order.', path: '/purchases',
+        cols: ['Completed', 'Customer', 'Tracking ID', 'Products', 'Sale', 'Received', 'Balance', 'Khareed (cost)', 'Est. profit'], empty: 'No completed orders yet.',
+        row: (r) => `<tr><td class="tabular-nums">${esc((r.completed_at || '').slice(0, 10))}</td><td>${who(r)}</td><td>${orderLink(r)}</td><td style="white-space:normal;min-width:140px">${esc(r.products)}</td><td class="tabular-nums">${esc(fmtMoney(r.sale_minor))}</td><td class="tabular-nums">${esc(fmtMoney(r.received_minor))}</td><td class="tabular-nums">${esc(fmtMoney(r.balance_minor))}</td><td>${r.cost_minor == null ? '<span style="color:var(--muted)">Cost not entered</span>' : esc(fmtMoney(r.cost_minor))}</td><td>${r.profit_minor == null ? '<span style="color:var(--muted)">Profit unavailable</span>' : esc(fmtMoney(r.profit_minor))}</td></tr>` });
+    }
 
     /* ===== v1.3 pages: payments, expenses, activity, reports, categories, add customer, settings ===== */
     const shell = (title, desc, actions, body) => {
