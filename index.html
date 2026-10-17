@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Customer CRM — Local</title>
 <style>
-/* ==========================================================================
-   1. DESIGN TOKENS
-   ========================================================================== */
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
 :root {
   --bg: #f6f8fb;
   --surface: #ffffff;
@@ -31,7 +31,6 @@
   --sidebar-bg: #0f172a;
   --sidebar-text: #cbd5e1;
   --sidebar-hover: #1e293b;
-  --sidebar-active: #312e81;
   --radius-sm: 6px;
   --radius: 10px;
   --radius-lg: 14px;
@@ -52,7 +51,6 @@ body {
   color: var(--text);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 a { color: var(--primary); text-decoration: none; }
 a:hover { text-decoration: underline; }
@@ -60,9 +58,7 @@ button { font-family: inherit; cursor: pointer; }
 h1, h2, h3, h4 { line-height: 1.25; color: var(--text); font-weight: 700; }
 h2 { font-size: 22px; letter-spacing: -0.015em; }
 h3 { font-size: 15px; }
-h4 { font-size: 13px; }
 input, select, textarea { font-family: inherit; font-size: 14px; }
-::selection { background: var(--primary-light); color: var(--primary-hover); }
 
 /* Skip link */
 .skip-link {
@@ -79,9 +75,9 @@ input, select, textarea { font-family: inherit; font-size: 14px; }
 }
 .skip-link:focus { top: 12px; text-decoration: none; }
 
-/* ==========================================================================
-   2. LAYOUT
-   ========================================================================== */
+/* ============================================================
+   LAYOUT
+   ============================================================ */
 .app { display: flex; min-height: 100vh; }
 .sidebar {
   width: 240px;
@@ -101,7 +97,6 @@ input, select, textarea { font-family: inherit; font-size: 14px; }
   font-size: 15px;
   margin: 0 20px 18px;
   font-weight: 700;
-  letter-spacing: -0.01em;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -159,7 +154,6 @@ input, select, textarea { font-family: inherit; font-size: 14px; }
   width: 100%;
 }
 
-/* Mobile menu toggle & backdrop */
 .menu-toggle {
   display: none;
   position: fixed;
@@ -186,9 +180,9 @@ input, select, textarea { font-family: inherit; font-size: 14px; }
 }
 .backdrop.show { display: block; }
 
-/* ==========================================================================
-   3. PAGE HEADER
-   ========================================================================== */
+/* ============================================================
+   PAGE HEADER
+   ============================================================ */
 .page-header {
   display: flex;
   align-items: flex-start;
@@ -206,9 +200,9 @@ input, select, textarea { font-family: inherit; font-size: 14px; }
 }
 .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-/* ==========================================================================
-   4. BUTTONS
-   ========================================================================== */
+/* ============================================================
+   BUTTONS
+   ============================================================ */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -221,7 +215,7 @@ input, select, textarea { font-family: inherit; font-size: 14px; }
   font-weight: 500;
   background: var(--primary);
   color: #fff;
-  transition: background var(--transition), border-color var(--transition), box-shadow var(--transition), transform 0.06s;
+  transition: background var(--transition), transform 0.06s;
   white-space: nowrap;
   line-height: 1.35;
 }
@@ -229,10 +223,10 @@ input, select, textarea { font-family: inherit; font-size: 14px; }
 .btn:active { transform: translateY(1px); }
 .btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--primary-light); }
 .btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
-.btn.secondary { background: var(--primary-light); color: var(--primary-hover); border-color: transparent; }
+.btn.secondary { background: var(--primary-light); color: var(--primary-hover); }
 .btn.secondary:hover { background: #dbe3fe; }
 .btn.outline { background: transparent; color: var(--text); border-color: var(--border-strong); }
-.btn.outline:hover { background: var(--surface-alt); border-color: var(--border-strong); }
+.btn.outline:hover { background: var(--surface-alt); }
 .btn.ghost { background: transparent; color: var(--muted); }
 .btn.ghost:hover { background: var(--surface-alt); color: var(--text); }
 .btn.success { background: var(--success); }
@@ -242,7 +236,6 @@ input, select, textarea { font-family: inherit; font-size: 14px; }
 .btn.danger-ghost { background: transparent; color: var(--danger); }
 .btn.danger-ghost:hover { background: var(--danger-light); }
 .btn.small { padding: 5px 10px; font-size: 12px; }
-.btn.icon { padding: 6px 8px; }
 .btn .spinner {
   width: 12px; height: 12px;
   border: 2px solid rgba(255,255,255,.4);
@@ -252,7 +245,6 @@ input, select, textarea { font-family: inherit; font-size: 14px; }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Copy button */
 .copy-btn {
   background: none;
   border: none;
@@ -261,13 +253,12 @@ input, select, textarea { font-family: inherit; font-size: 14px; }
   font-size: 12px;
   border-radius: 4px;
   transition: background var(--transition), color var(--transition);
-  cursor: pointer;
 }
 .copy-btn:hover { color: var(--primary); background: var(--primary-light); }
 
-/* ==========================================================================
-   5. PANELS & CARDS
-   ========================================================================== */
+/* ============================================================
+   PANELS & CARDS
+   ============================================================ */
 .panel {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -277,9 +268,7 @@ input, select, textarea { font-family: inherit; font-size: 14px; }
   box-shadow: var(--shadow-xs);
 }
 .panel h3 { margin-bottom: 14px; font-size: 15px; display: flex; align-items: center; gap: 8px; }
-.panel .panel-actions { margin-left: auto; display: flex; gap: 6px; }
 
-/* Stat cards */
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -335,9 +324,9 @@ input, select, textarea { font-family: inherit; font-size: 14px; }
 .stat-card.info .num { color: var(--info); }
 .stat-card.info::after { background: var(--info); }
 
-/* ==========================================================================
-   6. QUICK ENTRY
-   ========================================================================== */
+/* ============================================================
+   QUICK ENTRY
+   ============================================================ */
 .quick-entry {
   background: linear-gradient(135deg, #4338ca 0%, var(--primary) 100%);
   color: #fff;
@@ -346,7 +335,7 @@ input, select, textarea { font-family: inherit; font-size: 14px; }
   margin-bottom: 22px;
   box-shadow: 0 8px 28px rgba(79,70,229,.24);
 }
-.quick-entry h3 { color: #fff; margin-bottom: 4px; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+.quick-entry h3 { color: #fff; margin-bottom: 4px; font-size: 16px; }
 .quick-entry p { color: #c7d2fe; font-size: 13px; margin-bottom: 14px; }
 .quick-entry form { display: flex; gap: 10px; flex-wrap: wrap; }
 .quick-entry input {
@@ -362,14 +351,13 @@ input, select, textarea { font-family: inherit; font-size: 14px; }
 .quick-entry input:focus { outline: none; box-shadow: 0 0 0 3px rgba(255,255,255,.4); }
 .quick-entry .btn { background: #fff; color: var(--primary-hover); font-weight: 600; padding: 10px 22px; font-size: 14px; }
 .quick-entry .btn:hover { background: var(--primary-light); }
-.quick-entry .btn:disabled { background: #fff; opacity: .8; }
 .quick-entry .msg { margin-top: 12px; font-size: 13px; color: #c7d2fe; min-height: 18px; }
 .quick-entry .msg.error { color: #fecaca; }
 .quick-entry .msg a { color: #fff; text-decoration: underline; font-weight: 600; }
 
-/* ==========================================================================
-   7. TOOLBAR
-   ========================================================================== */
+/* ============================================================
+   TOOLBAR
+   ============================================================ */
 .toolbar {
   display: flex;
   gap: 10px;
@@ -381,25 +369,24 @@ input, select, textarea { font-family: inherit; font-size: 14px; }
   flex: 1;
   min-width: 200px;
   max-width: 380px;
-  padding: 9px 12px 9px 34px;
+  padding: 9px 12px;
   border: 1px solid var(--border-strong);
   border-radius: 8px;
-  background: var(--surface) url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E") no-repeat 12px center;
+  background: var(--surface);
 }
 .toolbar .search-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,.12); }
-.toolbar select { padding: 9px 12px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--surface); }
-.toolbar select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,.12); }
-.toolbar .date-input {
+.toolbar select, .toolbar .date-input {
   padding: 9px 12px;
   border: 1px solid var(--border-strong);
   border-radius: 8px;
   background: var(--surface);
   color: var(--text-soft);
 }
+.toolbar select:focus, .toolbar .date-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,.12); }
 
-/* ==========================================================================
-   8. TABLES
-   ========================================================================== */
+/* ============================================================
+   TABLES
+   ============================================================ */
 .table-wrap {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -433,21 +420,15 @@ td.mono, .mono { font-family: var(--mono); font-size: 13px; }
 }
 .pagination .pages { font-weight: 500; color: var(--text-soft); }
 
-/* ==========================================================================
-   9. EMPTY / LOADING / ERROR
-   ========================================================================== */
+/* ============================================================
+   EMPTY / LOADING / ERROR
+   ============================================================ */
 .empty {
   padding: 48px 24px;
   text-align: center;
   color: var(--muted);
 }
-.empty-icon {
-  font-size: 40px;
-  color: var(--border-strong);
-  margin-bottom: 12px;
-  display: block;
-  line-height: 1;
-}
+.empty-icon { font-size: 40px; color: var(--border-strong); margin-bottom: 12px; display: block; line-height: 1; }
 .empty h4 { font-size: 15px; color: var(--text); margin-bottom: 4px; }
 .empty p { font-size: 13.5px; margin-bottom: 16px; }
 .loading { padding: 48px 24px; text-align: center; color: var(--muted); font-size: 14px; }
@@ -484,15 +465,11 @@ td.mono, .mono { font-family: var(--mono); font-size: 13px; }
   gap: 12px;
   flex-wrap: wrap;
 }
-.info-box.success {
-  background: var(--success-light);
-  border-color: #a7f3d0;
-  color: #065f46;
-}
+.info-box.success { background: var(--success-light); border-color: #a7f3d0; color: #065f46; }
 
-/* ==========================================================================
-   10. BADGES
-   ========================================================================== */
+/* ============================================================
+   BADGES
+   ============================================================ */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -506,14 +483,6 @@ td.mono, .mono { font-family: var(--mono); font-size: 13px; }
   line-height: 1.7;
   white-space: nowrap;
 }
-.badge::before {
-  content: '';
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-  opacity: .65;
-}
-.badge.plain::before { display: none; }
 .badge.wholesale { background: var(--warning-light); color: #92400e; }
 .badge.retail { background: var(--success-light); color: #065f46; }
 .badge.lead { background: #dbeafe; color: #1e40af; }
@@ -526,9 +495,9 @@ td.mono, .mono { font-family: var(--mono); font-size: 13px; }
 .badge.inactive { background: #f3f4f6; color: #6b7280; }
 .badge.archived { background: #f3f4f6; color: #9ca3af; }
 
-/* ==========================================================================
-   11. FORMS
-   ========================================================================== */
+/* ============================================================
+   FORMS
+   ============================================================ */
 label {
   display: block;
   font-size: 12.5px;
@@ -553,18 +522,12 @@ input:focus, select:focus, textarea:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(79,70,229,.12);
 }
-input.invalid, select.invalid, textarea.invalid { border-color: var(--danger); }
-input.invalid:focus, textarea.invalid:focus { box-shadow: 0 0 0 3px rgba(220,38,38,.12); }
 textarea { min-height: 74px; resize: vertical; }
 .form-row { margin-bottom: 14px; }
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
 .form-grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .form-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
-fieldset { border: none; }
-.form-hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
-.field-error { font-size: 12px; color: var(--danger); margin-top: 4px; font-weight: 500; }
 
-/* Category checkboxes */
 .cat-checks { display: flex; flex-wrap: wrap; gap: 8px; }
 .cat-checks label {
   display: inline-flex;
@@ -583,7 +546,6 @@ fieldset { border: none; }
 }
 .cat-checks label:hover { border-color: var(--primary); }
 .cat-checks input { display: none; }
-.cat-checks input:checked + span { color: var(--primary-hover); }
 .cat-checks label:has(input:checked) {
   border-color: var(--primary);
   background: var(--primary-light);
@@ -591,9 +553,9 @@ fieldset { border: none; }
   font-weight: 600;
 }
 
-/* ==========================================================================
-   12. TABS
-   ========================================================================== */
+/* ============================================================
+   TABS
+   ============================================================ */
 .tabs {
   display: flex;
   gap: 2px;
@@ -622,9 +584,9 @@ fieldset { border: none; }
 .tab-panel.active { display: block; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 
-/* ==========================================================================
-   13. INFO GRID
-   ========================================================================== */
+/* ============================================================
+   INFO GRID
+   ============================================================ */
 .info-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -641,9 +603,9 @@ fieldset { border: none; }
 .info-item .val { font-size: 14px; color: var(--text); word-break: break-word; }
 .info-item .val.strong { font-weight: 600; }
 
-/* ==========================================================================
-   14. TOAST
-   ========================================================================== */
+/* ============================================================
+   TOAST
+   ============================================================ */
 .toast {
   position: fixed;
   bottom: 24px;
@@ -665,11 +627,7 @@ fieldset { border: none; }
   align-items: center;
   gap: 10px;
 }
-.toast::before {
-  content: 'ℹ';
-  font-size: 15px;
-  font-weight: 700;
-}
+.toast::before { content: 'ℹ'; font-size: 15px; font-weight: 700; }
 .toast.show { opacity: 1; transform: translateY(0); }
 .toast.success { background: var(--success); }
 .toast.success::before { content: '✓'; }
@@ -677,9 +635,9 @@ fieldset { border: none; }
 .toast.error::before { content: '⚠'; }
 .toast.info { background: var(--info); }
 
-/* ==========================================================================
-   15. MODALS
-   ========================================================================== */
+/* ============================================================
+   MODALS
+   ============================================================ */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -770,9 +728,9 @@ fieldset { border: none; }
   border: 1px solid #fcd34d;
 }
 
-/* ==========================================================================
-   16. UTILITIES
-   ========================================================================== */
+/* ============================================================
+   UTILITIES
+   ============================================================ */
 .flex { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .flex-between { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
 .muted { color: var(--muted); }
@@ -786,9 +744,9 @@ fieldset { border: none; }
 .hidden { display: none !important; }
 .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
 
-/* ==========================================================================
-   17. PRINT
-   ========================================================================== */
+/* ============================================================
+   PRINT
+   ============================================================ */
 @media print {
   .sidebar, .menu-toggle, .header-actions, .tabs, .toast, .modal-overlay { display: none !important; }
   .main { padding: 0; }
@@ -796,12 +754,10 @@ fieldset { border: none; }
   body { background: #fff; }
 }
 
-/* ==========================================================================
-   18. RESPONSIVE
-   ========================================================================== */
-@media (max-width: 900px) {
-  .form-grid.cols-2 { grid-template-columns: 1fr; }
-}
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 900px) { .form-grid.cols-2 { grid-template-columns: 1fr; } }
 @media (max-width: 820px) {
   .menu-toggle { display: flex; }
   .sidebar {
@@ -843,9 +799,7 @@ fieldset { border: none; }
 <div class="app">
   <aside class="sidebar" id="sidebar" aria-label="Main navigation">
     <h1>Customer CRM</h1>
-    <nav id="nav">
-      <!-- Injected by JS -->
-    </nav>
+    <nav id="nav"></nav>
   </aside>
   <main id="main" class="main" tabindex="-1">
     <div class="loading">Loading</div>
@@ -856,22 +810,16 @@ fieldset { border: none; }
 <div id="modal" class="modal-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle"></div>
 
 <script>
-/* ==========================================================================
-   CONFIG & STATE
-   ========================================================================== */
+/* ============================================================
+   CONFIG
+   ============================================================ */
 const API = '/api';
 const TZ = 'Asia/Karachi';
+const state = { navCounts: {}, isDirty: false, lastHash: location.hash || '#/', revertingHash: false };
 
-const state = {
-  navCounts: {},
-  isDirty: false,
-  lastHash: location.hash || '#/',
-  revertingHash: false,
-};
-
-/* ==========================================================================
+/* ============================================================
    NAV DEFINITION
-   ========================================================================== */
+   ============================================================ */
 const NAV_ITEMS = [
   { group: '' },
   { key: 'dashboard', href: '#/', label: 'Dashboard', icon: '▦' },
@@ -906,24 +854,19 @@ function renderNav(activeKey) {
   }).join('');
 }
 
-/* ==========================================================================
+/* ============================================================
    API CLIENT
-   ========================================================================== */
+   ============================================================ */
 async function api(path, opts = {}) {
   const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
   const fetchOpts = { ...opts, headers };
   if (opts.body && typeof opts.body !== 'string') fetchOpts.body = JSON.stringify(opts.body);
   let res;
-  try {
-    res = await fetch(API + path, fetchOpts);
-  } catch (netErr) {
-    throw new Error('Cannot reach the server. Is the app still running?');
-  }
+  try { res = await fetch(API + path, fetchOpts); }
+  catch (netErr) { throw new Error('Cannot reach the server. Is the app still running?'); }
   let data = null;
   const ct = res.headers.get('content-type') || '';
-  if (ct.includes('application/json')) {
-    try { data = await res.json(); } catch (_) {}
-  }
+  if (ct.includes('application/json')) { try { data = await res.json(); } catch (_) {} }
   if (!res.ok) {
     const msg = (data && data.error) || `Request failed (${res.status})`;
     throw Object.assign(new Error(msg), { status: res.status, data });
@@ -931,9 +874,9 @@ async function api(path, opts = {}) {
   return data;
 }
 
-/* ==========================================================================
+/* ============================================================
    FORMATTERS
-   ========================================================================== */
+   ============================================================ */
 function esc(s) {
   if (s === null || s === undefined) return '';
   return String(s).replace(/[&<>"']/g, c => ({
@@ -973,9 +916,9 @@ function escMulti(str) {
   return str ? String(str).split(',').filter(Boolean).map(s => esc(s.trim())) : [];
 }
 
-/* ==========================================================================
+/* ============================================================
    TOAST
-   ========================================================================== */
+   ============================================================ */
 let toastTimer;
 function toast(msg, type = '') {
   const el = document.getElementById('toast');
@@ -985,21 +928,18 @@ function toast(msg, type = '') {
   toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
 }
 
-/* ==========================================================================
-   MODAL with focus trap
-   ========================================================================== */
+/* ============================================================
+   MODAL
+   ============================================================ */
 let lastFocusEl = null;
 function openModal(html) {
   const m = document.getElementById('modal');
   m.innerHTML = html;
   m.hidden = false;
   lastFocusEl = document.activeElement;
-  const focusables = m.querySelectorAll(
-    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-  );
+  const focusables = m.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
   const first = focusables[0];
   if (first) setTimeout(() => first.focus(), 30);
-
   m.querySelectorAll('[data-close]').forEach(b => b.onclick = closeModal);
   const handleKey = (e) => {
     if (e.key === 'Escape') { e.preventDefault(); closeModal(); }
@@ -1023,9 +963,9 @@ function closeModal() {
   if (lastFocusEl && document.body.contains(lastFocusEl)) lastFocusEl.focus();
 }
 
-/* ==========================================================================
+/* ============================================================
    VIEW HELPERS
-   ========================================================================== */
+   ============================================================ */
 const viewEl = () => document.getElementById('main');
 function setView(html) { viewEl().innerHTML = html; }
 function showLoading() { setView('<div class="loading">Loading</div>'); }
@@ -1039,9 +979,9 @@ function emptyState({ icon = '◇', title, message, action }) {
   </div>`;
 }
 
-/* ==========================================================================
+/* ============================================================
    MOBILE MENU
-   ========================================================================== */
+   ============================================================ */
 function initMobileMenu() {
   const toggle = document.getElementById('menuToggle');
   const sidebar = document.getElementById('sidebar');
@@ -1057,47 +997,35 @@ function initMobileMenu() {
     toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
   };
   backdrop.onclick = close;
-  sidebar.addEventListener('click', (e) => {
-    if (e.target.closest('a')) close();
-  });
+  sidebar.addEventListener('click', (e) => { if (e.target.closest('a')) close(); });
 }
 
-/* ==========================================================================
+/* ============================================================
    ROUTER
-   ========================================================================== */
+   ============================================================ */
 async function route() {
   const hash = location.hash.slice(1) || '/';
   const [pathPart, queryPart] = hash.split('?');
   const params = new URLSearchParams(queryPart || '');
   const parts = pathPart.split('/').filter(Boolean);
 
-  // Determine active nav key
   let activeKey = 'dashboard';
-  if (parts[0] === 'customers') {
-    activeKey = params.get('category')?.toLowerCase() ||
-      (params.get('filter') === 'previous' ? 'previous' : 'customers');
-  } else if (parts[0] === 'customer') {
-    activeKey = 'customers';
-  } else if (parts[0] === 'orders') {
+  if (parts[0] === 'customers') activeKey = params.get('category')?.toLowerCase() || (params.get('filter') === 'previous' ? 'previous' : 'customers');
+  else if (parts[0] === 'customer') activeKey = 'customers';
+  else if (parts[0] === 'orders') {
     if (params.get('finalized')) activeKey = 'completed';
     else if (params.get('status') === 'draft') activeKey = 'drafts';
     else if (params.get('status') === 'confirmed') activeKey = 'pending';
     else if (params.get('status') === 'cancelled') activeKey = 'cancelled';
     else if (params.get('progress')) activeKey = 'inprogress';
     else activeKey = 'orders';
-  } else if (parts[0] === 'order') {
-    activeKey = 'orders';
-  } else if (parts[0] === 'hardware') {
-    activeKey = 'hardware';
-  } else if (parts[0] === 'backup') {
-    activeKey = 'backup';
-  } else if (parts[0] === 'settings') {
-    activeKey = 'settings';
   }
+  else if (parts[0] === 'order') activeKey = 'orders';
+  else if (parts[0] === 'hardware') activeKey = 'hardware';
+  else if (parts[0] === 'backup') activeKey = 'backup';
+  else if (parts[0] === 'settings') activeKey = 'settings';
 
   renderNav(activeKey);
-
-  // Load counts for sidebar
   refreshNavCounts();
 
   try {
@@ -1112,9 +1040,8 @@ async function route() {
       case 'backup': return await viewBackup();
       case 'settings': return await viewSettings();
       default: setView(emptyState({
-        title: 'Page not found',
-        message: 'The requested page does not exist.',
-        action: '<a class="btn" href="#/">Go to Dashboard</a>',
+        title: 'Page not found', message: 'The requested page does not exist.',
+        action: '<a class="btn" href="#/">Go to Dashboard</a>'
       }));
     }
   } catch (e) {
@@ -1127,40 +1054,18 @@ async function refreshNavCounts() {
   try {
     const { counts } = await api('/dashboard/stats');
     state.navCounts = counts;
-    renderNav(null, true);
-    // Re-apply active class
-    const hash = location.hash.slice(1) || '/';
-    const [pathPart, queryPart] = hash.split('?');
-    const params = new URLSearchParams(queryPart || '');
-    const parts = pathPart.split('/').filter(Boolean);
-    let activeKey = 'dashboard';
-    if (parts[0] === 'customers') activeKey = params.get('category')?.toLowerCase() || (params.get('filter') === 'previous' ? 'previous' : 'customers');
-    else if (parts[0] === 'customer') activeKey = 'customers';
-    else if (parts[0] === 'orders') {
-      if (params.get('finalized')) activeKey = 'completed';
-      else if (params.get('status') === 'draft') activeKey = 'drafts';
-      else if (params.get('status') === 'confirmed') activeKey = 'pending';
-      else if (params.get('status') === 'cancelled') activeKey = 'cancelled';
-      else if (params.get('progress')) activeKey = 'inprogress';
-      else activeKey = 'orders';
-    }
-    else if (parts[0] === 'order') activeKey = 'orders';
-    else if (parts[0] === 'hardware') activeKey = 'hardware';
-    else if (parts[0] === 'backup') activeKey = 'backup';
-    else if (parts[0] === 'settings') activeKey = 'settings';
-    document.querySelectorAll('#nav a').forEach(a => {
-      a.classList.toggle('active', a.dataset.nav === activeKey);
-    });
+    // re-render nav with counts but preserve active
+    const active = document.querySelector('#nav a.active')?.dataset.nav;
+    renderNav(active);
   } catch (_) { /* silent */ }
 }
 
-/* ==========================================================================
+/* ============================================================
    DASHBOARD
-   ========================================================================== */
+   ============================================================ */
 async function viewDashboard() {
   showLoading();
   const { counts, recentCustomers, recentOrders, recentlyFinalized } = await api('/dashboard/stats');
-
   const today = new Intl.DateTimeFormat('en-GB', {
     timeZone: TZ, weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
   }).format(new Date());
@@ -1191,7 +1096,7 @@ async function viewDashboard() {
     <div id="globalResults"></div>
 
     <div class="quick-entry">
-      <h3><span aria-hidden="true">＋</span> Save a new phone number</h3>
+      <h3>＋ Save a new phone number</h3>
       <p>The phone number alone is enough. Add details later whenever you have them.</p>
       <form id="quickForm" novalidate>
         <input id="quickPhone" type="tel" placeholder="e.g. 0300 1234567 or +92 300 1234567" autocomplete="off" required aria-label="Phone number">
@@ -1223,10 +1128,7 @@ async function viewDashboard() {
                 </tr>
               `).join('')}
             </tbody></table></div>`
-          : emptyState({
-              icon: '👤', title: 'No customers yet',
-              message: 'Save your first phone number above to get started.',
-            })}
+          : emptyState({ icon: '👤', title: 'No customers yet', message: 'Save your first phone number above to get started.' })}
       </div>
       <div class="panel">
         <h3>Recent Orders</h3>
@@ -1241,10 +1143,7 @@ async function viewDashboard() {
                 </tr>
               `).join('')}
             </tbody></table></div>`
-          : emptyState({
-              icon: '🧾', title: 'No orders yet',
-              message: 'Open a customer and click “New Order” to create one.',
-            })}
+          : emptyState({ icon: '🧾', title: 'No orders yet', message: 'Open a customer and click "New Order" to create one.' })}
       </div>
     </div>
 
@@ -1252,10 +1151,7 @@ async function viewDashboard() {
       <div class="panel">
         <h3>Recently Finalized</h3>
         <div class="table-wrap"><table>
-          <thead><tr>
-            <th>Tracking ID</th><th>Customer</th><th>Final Price</th>
-            <th>Finalized</th><th></th>
-          </tr></thead>
+          <thead><tr><th>Tracking ID</th><th>Customer</th><th>Final Price</th><th>Finalized</th><th></th></tr></thead>
           <tbody>${recentlyFinalized.map(o => `
             <tr>
               <td class="mono">${esc(o.tracking_id)}
@@ -1271,7 +1167,6 @@ async function viewDashboard() {
     ` : ''}
   `);
 
-  // Quick save
   const form = document.getElementById('quickForm');
   const input = document.getElementById('quickPhone');
   const btn = document.getElementById('quickSave');
@@ -1305,7 +1200,6 @@ async function viewDashboard() {
     }
   });
 
-  // Copy buttons
   document.querySelectorAll('[data-copy]').forEach(b => {
     b.onclick = (e) => {
       e.stopPropagation();
@@ -1315,7 +1209,6 @@ async function viewDashboard() {
     };
   });
 
-  // Global search
   const searchInput = document.getElementById('globalSearch');
   const results = document.getElementById('globalResults');
   let timer;
@@ -1327,11 +1220,7 @@ async function viewDashboard() {
       try {
         const { customers, orders } = await api('/search?q=' + encodeURIComponent(q));
         if (!customers.length && !orders.length) {
-          results.innerHTML = `<div class="panel"><div class="empty">
-            <span class="empty-icon">🔍</span>
-            <h4>No results for "${esc(q)}"</h4>
-            <p>Try a different phone number, name, or tracking ID.</p>
-          </div></div>`;
+          results.innerHTML = `<div class="panel">${emptyState({ icon: '🔍', title: `No results for "${esc(q)}"`, message: 'Try a different phone number, name, or tracking ID.' })}</div>`;
           return;
         }
         let html = '';
@@ -1360,9 +1249,9 @@ async function viewDashboard() {
   });
 }
 
-/* ==========================================================================
+/* ============================================================
    CUSTOMERS LIST
-   ========================================================================== */
+   ============================================================ */
 async function viewCustomers(params) {
   const category = params.get('category') || '';
   const filter = params.get('filter') || '';
@@ -1375,9 +1264,7 @@ async function viewCustomers(params) {
   setView(`
     <div class="page-header">
       <div><h2>${esc(title)}</h2><div class="sub" id="countLine">Loading…</div></div>
-      <div class="header-actions">
-        <a class="btn" href="#/">+ Add Customer</a>
-      </div>
+      <div class="header-actions"><a class="btn" href="#/">+ Add Customer</a></div>
     </div>
     <div class="toolbar">
       <input id="cSearch" type="search" class="search-input" placeholder="Search phone, WhatsApp, name…" aria-label="Search customers">
@@ -1413,7 +1300,7 @@ async function viewCustomers(params) {
       wrap.innerHTML = emptyState({
         icon: '👥', title: 'No customers match this filter',
         message: 'Try clearing filters or add a new customer from the dashboard.',
-        action: '<a class="btn" href="#/">Go to Dashboard</a>',
+        action: '<a class="btn" href="#/">Go to Dashboard</a>'
       });
       document.getElementById('cPager').innerHTML = '';
       return;
@@ -1435,13 +1322,13 @@ async function viewCustomers(params) {
           <td class="mono">${c.whatsapp
             ? esc(c.whatsapp) + ` <button class="copy-btn" data-copy="${esc(c.whatsapp)}" aria-label="Copy WhatsApp">⧉</button>`
             : '<span class="muted">—</span>'}</td>
-          <td>${esc(c.name || '<span class="muted">Name not added</span>')}</td>
+          <td>${c.name ? esc(c.name) : '<span class="muted">Name not added</span>'}</td>
           <td>${catBadges}</td>
           <td><span class="badge ${c.status}">${esc(c.status)}</span></td>
           <td>${c.completed_order_count > 0
             ? `<span class="badge completed">${c.completed_order_count} completed</span>`
             : '<span class="muted">—</span>'}</td>
-          <td class="muted" style="font-size:12px">${fmtDate(c.created_at)}<br>${fmtTime(c.created_at)} · ${fmtDay(c.created_at)}</td>
+          <td class="muted" style="font-size:12px">${fmtDate(c.created_at)}<br>${fmtTime(c.created_at)}</td>
           <td><a class="btn small secondary" href="#/customer/${c.id}">Open</a></td>
         </tr>`;
       }).join('')}</tbody>
@@ -1479,9 +1366,9 @@ async function viewCustomers(params) {
   await load();
 }
 
-/* ==========================================================================
+/* ============================================================
    CUSTOMER DETAILS
-   ========================================================================== */
+   ============================================================ */
 async function viewCustomerDetails(id, params) {
   if (!id) { showError('Missing customer ID'); return; }
   const isNew = params.get('new') === '1';
@@ -1570,9 +1457,7 @@ async function viewCustomerDetails(id, params) {
           </div>
           <div class="form-row"><label>Address</label><textarea name="address">${esc(customer.address || '')}</textarea></div>
           <div class="form-row"><label>Notes</label><textarea name="notes">${esc(customer.notes || '')}</textarea></div>
-          <div class="form-actions">
-            <button class="btn" type="submit">Save Contact Details</button>
-          </div>
+          <div class="form-actions"><button class="btn" type="submit">Save Contact Details</button></div>
         </form>
       </div>
     </div>
@@ -1589,9 +1474,7 @@ async function viewCustomerDetails(id, params) {
             </label>
           `).join('')}
         </div>
-        <div class="form-actions">
-          <button class="btn" id="saveCatsBtn">Save Categories</button>
-        </div>
+        <div class="form-actions"><button class="btn" id="saveCatsBtn">Save Categories</button></div>
       </div>
     </div>
 
@@ -1698,7 +1581,6 @@ async function viewCustomerDetails(id, params) {
     </div>
   `);
 
-  // Tabs
   document.querySelectorAll('.tabs button').forEach(b => {
     b.onclick = () => {
       document.querySelectorAll('.tabs button').forEach(x => x.classList.remove('active'));
@@ -1709,7 +1591,6 @@ async function viewCustomerDetails(id, params) {
     };
   });
 
-  // Contact form save
   document.getElementById('contactForm').onsubmit = async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
@@ -1721,7 +1602,6 @@ async function viewCustomerDetails(id, params) {
     } catch (err) { toast(err.message, 'error'); }
   };
 
-  // Categories
   document.getElementById('saveCatsBtn').onclick = async () => {
     const cats = Array.from(document.querySelectorAll('#catChecks input:checked')).map(x => x.value);
     try {
@@ -1731,7 +1611,6 @@ async function viewCustomerDetails(id, params) {
     } catch (err) { toast(err.message, 'error'); }
   };
 
-  // Hardware
   document.getElementById('hwForm').onsubmit = async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
@@ -1745,7 +1624,6 @@ async function viewCustomerDetails(id, params) {
     } catch (err) { toast(err.message, 'error'); }
   };
 
-  // Messages
   document.getElementById('msgForm').onsubmit = async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
@@ -1757,7 +1635,6 @@ async function viewCustomerDetails(id, params) {
     } catch (err) { toast(err.message, 'error'); }
   };
 
-  // New order
   async function createOrder() {
     try {
       const order = await api('/customers/' + id + '/orders', { method: 'POST', body: {} });
@@ -1768,9 +1645,9 @@ async function viewCustomerDetails(id, params) {
   document.getElementById('newOrderBtn2').onclick = createOrder;
 }
 
-/* ==========================================================================
+/* ============================================================
    ORDERS LIST
-   ========================================================================== */
+   ============================================================ */
 async function viewOrders(params) {
   const statusParam = params.get('status') || '';
   const finalized = params.get('finalized') === '1';
@@ -1821,7 +1698,7 @@ async function viewOrders(params) {
     if (!rows.length) {
       wrap.innerHTML = emptyState({
         icon: '🧾', title: 'No orders match this filter',
-        message: 'Try clearing filters or create an order from a customer page.',
+        message: 'Try clearing filters or create an order from a customer page.'
       });
       document.getElementById('oPager').innerHTML = '';
       return;
@@ -1874,18 +1751,16 @@ async function viewOrders(params) {
     clearTimeout(timer);
     timer = setTimeout(() => { search = e.target.value.trim(); offset = 0; load(); }, 250);
   });
-  document.getElementById('oStatus').addEventListener('change', (e) => {
-    status = e.target.value; offset = 0; load();
-  });
+  document.getElementById('oStatus').addEventListener('change', (e) => { status = e.target.value; offset = 0; load(); });
   document.getElementById('oFrom').addEventListener('change', (e) => { from = e.target.value; offset = 0; load(); });
   document.getElementById('oTo').addEventListener('change', (e) => { to = e.target.value; offset = 0; load(); });
 
   await load();
 }
 
-/* ==========================================================================
+/* ============================================================
    ORDER DETAILS
-   ========================================================================== */
+   ============================================================ */
 async function viewOrderDetails(id) {
   if (!id) { showError('Missing order ID'); return; }
   showLoading();
@@ -2035,7 +1910,6 @@ async function viewOrderDetails(id) {
     </div>
   `);
 
-  // Tabs
   document.querySelectorAll('.tabs button').forEach(b => {
     b.onclick = () => {
       document.querySelectorAll('.tabs button').forEach(x => x.classList.remove('active'));
@@ -2046,7 +1920,6 @@ async function viewOrderDetails(id) {
     };
   });
 
-  // Delete item
   document.querySelectorAll('[data-del]').forEach(b => {
     b.onclick = async () => {
       if (!confirm('Remove this item?')) return;
@@ -2058,7 +1931,6 @@ async function viewOrderDetails(id) {
     };
   });
 
-  // Add item
   const itemForm = document.getElementById('itemForm');
   if (itemForm) {
     itemForm.onsubmit = async (e) => {
@@ -2081,7 +1953,6 @@ async function viewOrderDetails(id) {
     };
   }
 
-  // Save pricing
   const orderForm = document.getElementById('orderForm');
   if (orderForm) {
     orderForm.onsubmit = async (e) => {
@@ -2103,7 +1974,6 @@ async function viewOrderDetails(id) {
     };
   }
 
-  // Copy tracking
   const copyBtn = document.getElementById('copyTrackBtn');
   if (copyBtn) copyBtn.onclick = () => {
     navigator.clipboard.writeText(order.tracking_id)
@@ -2111,10 +1981,8 @@ async function viewOrderDetails(id) {
       .catch(() => toast('Copy failed', 'error'));
   };
 
-  // Print
   document.getElementById('printBtn').onclick = () => printOrder(order);
 
-  // Confirm
   const confirmBtn = document.getElementById('confirmBtn');
   if (confirmBtn) confirmBtn.onclick = () => {
     openModal(`
@@ -2142,7 +2010,6 @@ async function viewOrderDetails(id) {
     };
   };
 
-  // Cancel
   const cancelBtn = document.getElementById('cancelBtn');
   if (cancelBtn) cancelBtn.onclick = () => {
     openModal(`
@@ -2170,7 +2037,6 @@ async function viewOrderDetails(id) {
     };
   };
 
-  // Finalize
   const finalizeBtn = document.getElementById('finalizeBtn');
   if (finalizeBtn) finalizeBtn.onclick = () => {
     if (order.items.length === 0) { toast('Add at least one item before finalizing', 'error'); return; }
@@ -2224,9 +2090,9 @@ async function viewOrderDetails(id) {
   };
 }
 
-/* ==========================================================================
-   PRINT ORDER
-   ========================================================================== */
+/* ============================================================
+   PRINT
+   ============================================================ */
 function printOrder(order) {
   const rows = order.items.map(it => `
     <tr>
@@ -2292,9 +2158,9 @@ function printOrder(order) {
   w.document.close();
 }
 
-/* ==========================================================================
-   HARDWARE REQUIREMENTS PAGE
-   ========================================================================== */
+/* ============================================================
+   HARDWARE PAGE
+   ============================================================ */
 async function viewHardware() {
   showLoading();
   const rows = await api('/hardware');
@@ -2320,14 +2186,14 @@ async function viewHardware() {
       : emptyState({
           icon: '⚙', title: 'No hardware requirements yet',
           message: 'Open a customer and add a hardware requirement from their detail page.',
-          action: '<a class="btn" href="#/customers">Browse Customers</a>',
+          action: '<a class="btn" href="#/customers">Browse Customers</a>'
         })}
   `);
 }
 
-/* ==========================================================================
+/* ============================================================
    BACKUP & RESTORE
-   ========================================================================== */
+   ============================================================ */
 async function viewBackup() {
   showLoading();
   const backups = await api('/backups');
@@ -2414,9 +2280,9 @@ async function viewBackup() {
   });
 }
 
-/* ==========================================================================
+/* ============================================================
    SETTINGS
-   ========================================================================== */
+   ============================================================ */
 async function viewSettings() {
   showLoading();
   let health = { ok: false };
@@ -2449,25 +2315,21 @@ async function viewSettings() {
   `);
 }
 
-/* ==========================================================================
-   UNSAVED CHANGES PROTECTION
-   ========================================================================== */
+/* ============================================================
+   UNSAVED CHANGES
+   ============================================================ */
 function markDirty() { state.isDirty = true; }
 function clearDirty() { state.isDirty = false; }
-
 document.addEventListener('input', (e) => {
-  if (e.target.closest('form') && e.target.matches('input, textarea, select')) {
-    markDirty();
-  }
+  if (e.target.closest('form') && e.target.matches('input, textarea, select')) markDirty();
 });
-
 window.addEventListener('beforeunload', (e) => {
   if (state.isDirty) { e.preventDefault(); e.returnValue = ''; }
 });
 
-/* ==========================================================================
-   HASH ROUTER (with dirty check)
-   ========================================================================== */
+/* ============================================================
+   ROUTER HOOKS
+   ============================================================ */
 window.addEventListener('hashchange', () => {
   if (state.revertingHash) { state.revertingHash = false; return; }
   if (state.isDirty) {
