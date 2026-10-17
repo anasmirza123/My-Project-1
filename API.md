@@ -1,5 +1,5 @@
-# API routes (generated from server.js)
-Same-origin, JSON only. Errors: `{"error":"message"}` with 400/404/409/500 (503 for health when the database is down). Unknown `/api/*` routes return JSON 404.
+# API routes (generated from server.js + followups.js)
+Same-origin JSON. Errors: `{"error":"message"}` with 400/404/409/500 (503 for health when the database is down).
 
 |Method|Route|
 |---|---|
@@ -22,8 +22,16 @@ Same-origin, JSON only. Errors: `{"error":"message"}` with 400/404/409/500 (503 
 |GET|`/api/customers/:id/messages`|
 |POST|`/api/customers/:id/messages`|
 |POST|`/api/customers/:id/orders`|
+|GET|`/api/customers/:id/purchases`|
+|GET|`/api/dashboard/followups`|
 |GET|`/api/dashboard/stats`|
 |GET|`/api/expenses`|
+|GET|`/api/followups`|
+|POST|`/api/followups`|
+|PATCH|`/api/followups/:id`|
+|POST|`/api/followups/:id/cancel`|
+|POST|`/api/followups/:id/complete`|
+|POST|`/api/followups/:id/reschedule`|
 |GET|`/api/hardware`|
 |GET|`/api/health`|
 |GET|`/api/orders`|
@@ -38,6 +46,7 @@ Same-origin, JSON only. Errors: `{"error":"message"}` with 400/404/409/500 (503 
 |POST|`/api/orders/:id/refunds`|
 |POST|`/api/orders/:id/status`|
 |GET|`/api/payments`|
+|GET|`/api/purchases`|
 |GET|`/api/register`|
 |GET|`/api/reports`|
 |GET|`/api/reports/:type`|
