@@ -1,6 +1,8 @@
 /* ============================================================================
    CUSTOMER CRM — BACKEND (Express + better-sqlite3)
+   Complete backend with embedded schema.
    ============================================================================ */
+
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
