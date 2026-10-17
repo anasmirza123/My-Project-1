@@ -8,6 +8,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import initSqlJs from 'sql.js';
+import { registerFollowups, FOLLOWUP_SCHEMA } from './followups.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -392,6 +393,7 @@ function runMigrations(db                 ) {
     if (!itemCols.includes('unit_purchase_cost_minor')) db.exec('ALTER TABLE order_items ADD COLUMN unit_purchase_cost_minor INTEGER;');
     if (!itemCols.includes('line_sale_total_minor')) db.exec('ALTER TABLE order_items ADD COLUMN line_sale_total_minor INTEGER DEFAULT 0;');
     if (!itemCols.includes('line_purchase_total_minor')) db.exec('ALTER TABLE order_items ADD COLUMN line_purchase_total_minor INTEGER;');
+    db.exec(FOLLOWUP_SCHEMA); // follow-ups table (idempotent; also re-applied after a restore)
   } catch (err) {
     console.error('[db migration]', err);
   }
@@ -2058,6 +2060,8 @@ async function startServer() {
   });
 
   // Block sensitive directory access
+  registerFollowups(app, db, { httpError, logActivity, calcFin: calculateOrderFinancials });
+
   app.use('/data', (req         , res          ) => res.status(403).send('Forbidden'));
   app.use('/backups', (req         , res          ) => res.status(403).send('Forbidden'));
 
