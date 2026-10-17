@@ -1,34 +1,14 @@
 @echo off
 setlocal
-title Customer CRM & Order Tracking System
+title Anas Management System
 cd /d "%~dp0"
-
-echo.
-echo  ========================================================
-echo    Customer Management ^& Order Tracking System (Local)
-echo  ========================================================
-echo.
-
-where node >nul 2>nul
-if errorlevel 1 (
-    echo  [ERROR] Node.js is not installed. Install Node.js 18 or newer from https://nodejs.org/
-    echo.
-    pause
-    exit /b 1
+where node >nul 2>nul || (echo [ERROR] Node.js 18+ is required: https://nodejs.org/ & pause & exit /b 1)
+if not exist "node_modules\express" (
+  echo [SETUP] Installing dependencies ^(internet needed once^)...
+  call npm install || (echo [ERROR] npm install failed. & pause & exit /b 1)
 )
-
-if not exist "node_modules" (
-    echo  [SETUP] First run: installing dependencies ^(needs internet once^)...
-    call npm install
-    if errorlevel 1 (
-        echo  [ERROR] npm install failed. Check your internet connection and try again.
-        pause
-        exit /b 1
-    )
-)
-
-echo  Starting at http://localhost:3000  -  press Ctrl+C to stop.
-echo.
-start "" cmd /c "timeout /t 3 >nul & start http://localhost:3000"
+netstat -ano | findstr /R /C:":3000 .*LISTENING" >nul && (echo [ERROR] Port 3000 is already in use - another copy of the app may be running. Close it first, then start again. & pause & exit /b 1)
+start "" /min cmd /c "node diagnose.js --wait-open"
+echo Starting at http://localhost:3000 - press Ctrl+C to stop.
 call npm start
 pause
