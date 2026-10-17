@@ -7,6 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "diagnose": "node diagnose.js",
+    "test": "node --no-warnings test-followups.js && node --no-warnings test-compat.js",
     "start:sample": "node -e \"process.env.SEED_SAMPLE_DATA='1'; import('./server.js')\""
   },
   "engines": { "node": ">=18" },
