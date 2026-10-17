@@ -54,3 +54,13 @@ The app calls `GET /api/dashboard/stats` on the same address the page was opened
 
 ## Database
 SQLite file `data/customer-management.sqlite` (created on first start, never reset automatically, foreign keys on). Migration history is recorded in table `schema_migrations`. Backup: Backup & Restore page (files in `backups/`). Manual restore: stop the app, copy a backup over the data file, start again.
+
+## Follow-ups and Next Visit (v1.3.0)
+- When you set an order to **Completed**, a prompt offers: Schedule Next Visit, Create follow-up, customer profile, open order, purchase history, or Skip. Completing never creates or completes a follow-up by itself and never changes payment status.
+- **Follow-ups** page (sidebar): filter Due today / Overdue / Upcoming / Completed; each row shows previous purchase, tracking ID, paid, balance, next visit, type and purpose. The ⋮ menu has Call (opens your phone app only - nothing is dialled by the app), customer, order, record payment, reschedule, complete, cancel. Types: Next Visit, New Order, Payment Collection, Product Requirement, Customer Check-in, Delivery Follow-up, Other.
+- Overdue / Due Today are calculated from the date in Asia/Karachi; the dashboard shows the counts and today's/overdue visits (cards link to the filtered list).
+- **Purchase History** lists completed orders, one row per order (it is derived from orders, so an order cannot be counted twice). Missing costs show "Cost not entered" / "Profit unavailable".
+- Tests: `npm test` runs `test-followups.js` (Node 22+ only for this test) against a real SQLite database.
+
+## Not built yet
+Auto-save with Saved/Saving/Failed states and Retry, clickable dashboard cards for the older statistics, kebab menus on the older tables, a dedicated Add Order page, Refund Pending / Payment Review statuses, delivery-status filter.
