@@ -1,0 +1,26 @@
+// Run: node --no-warnings test-compat.js (Node 22+). Real SQLite + fake router; does not start Express.
+import { DatabaseSync } from 'node:sqlite'; import assert from 'node:assert/strict'; import { registerCompat } from './compat.js';
+const raw = new DatabaseSync(':memory:');
+raw.exec(`CREATE TABLE customers(id INTEGER PRIMARY KEY,name TEXT,phone TEXT);CREATE TABLE orders(id INTEGER PRIMARY KEY,tracking_id TEXT,customer_id INT,payment_status TEXT,amount_received_minor INT DEFAULT 0,updated_at TEXT,customer_name_snapshot TEXT,customer_phone_snapshot TEXT);
+CREATE TABLE payments(id INTEGER PRIMARY KEY,order_id INT,amount_minor INT,payment_status TEXT DEFAULT 'confirmed',notes TEXT);CREATE TABLE refunds(id INTEGER PRIMARY KEY,order_id INT,amount_minor INT,reason TEXT);
+CREATE TABLE customer_messages(id INTEGER PRIMARY KEY,customer_id INT,message_text TEXT);CREATE TABLE activity_logs(id INTEGER PRIMARY KEY AUTOINCREMENT,customer_id INT,order_id INT,action_type TEXT,details_json TEXT,created_at TEXT DEFAULT CURRENT_TIMESTAMP);
+INSERT INTO customers VALUES(1,'Ali','0300');INSERT INTO orders VALUES(5,'NT-1',1,'paid',50000,NULL,NULL,NULL);INSERT INTO payments VALUES(1,5,30000,'confirmed',NULL),(2,5,20000,'confirmed',NULL);
+INSERT INTO refunds VALUES(1,5,1000,'damaged');INSERT INTO customer_messages VALUES(1,1,'need 3 switches');`);
+const db = { prepare: (s) => { const st = raw.prepare(s); return { run: (...a) => st.run(...a), get: (...a) => st.get(...a), all: (...a) => st.all(...a) }; } };
+const R = { use: [], get: {}, post: {} }; const app = { use: (f) => R.use.push(f), get: (p, f) => (R.get[p] = f), post: (p, f) => (R.post[p] = f) };
+const httpError = (status, message) => Object.assign(new Error(message), { status });
+const fin = () => { const c = raw.prepare("SELECT COALESCE(SUM(amount_minor),0) s FROM payments WHERE order_id=5 AND payment_status='confirmed'").get().s; return { netAmountReceived: c, remainingBalance: 50000 - c, calculatedPaymentStatus: c >= 50000 ? 'paid' : c > 0 ? 'partial' : 'unpaid' }; };
+registerCompat(app, db, { httpError, calcFin: fin, logActivity: (a) => raw.prepare('INSERT INTO activity_logs(customer_id,order_id,action_type,details_json) VALUES(?,?,?,?)').run(a.customerId, a.orderId, a.actionType, JSON.stringify(a.details)) });
+const run = (h, req) => { let out, nxt = false; const res = { code: 200, status(c) { this.code = c; return this; }, json(x) { out = { code: this.code, body: x }; } }; req.query ??= {}; req.params ??= {}; req.body ??= {}; h(req, res, (e) => { if (e) out = { code: e.status || 500, body: { error: e.message } }; else nxt = true; }); return { out, nxt }; };
+let n = 0; const ok = (t, f) => { f(); n++; console.log('PASS', t); };
+ok('PUT rewritten to PATCH only for exact id paths', () => { for (const [u, want] of [['/api/customers/3', 'PATCH'], ['/api/orders/9', 'PATCH'], ['/api/customers/3/categories', 'PUT'], ['/api/hardware/3', 'PUT']]) { const q = { method: 'PUT', path: u }; run(R.use[0], q); assert.equal(q.method, want, u); } });
+ok('orders/completed forwards to register with status=completed', () => { const q = { query: { search: 'a' }, url: '/api/orders/completed' }; assert.equal(run(R.get['/api/orders/completed'], q).nxt, true); assert.deepEqual([q.url, q.query.status, q.query.search], ['/api/register', 'completed', 'a']); });
+ok('POST /api/payments forwards by order_id, rejects missing', () => { const q = { body: { order_id: 5 }, url: '/api/payments' }; run(R.post['/api/payments'], q); assert.equal(q.url, '/api/orders/5/payments'); assert.equal(run(R.post['/api/payments'], { body: {} }).out.code, 400); });
+ok('reverse payment: cancelled, order recalculated, audit logged, not deleted', () => { const r = run(R.post['/api/payments/:id/reverse'], { params: { id: '2' }, body: { reason: 'wrong amount' } }).out; assert.equal(r.code, 200);
+  assert.deepEqual([r.body.payment.payment_status, r.body.payment_status, r.body.amount_received_minor, r.body.remaining_balance_minor], ['cancelled', 'partial', 30000, 20000]);
+  assert.equal(raw.prepare('SELECT COUNT(*) n FROM payments').get().n, 2); assert.equal(raw.prepare('SELECT amount_received_minor a, payment_status s FROM orders WHERE id=5').get().a, 30000); });
+ok('double reversal 409, unknown 404, bad id 400', () => { const t = (id) => run(R.post['/api/payments/:id/reverse'], { params: { id } }).out.code; assert.deepEqual([t('2'), t('99'), t('x')], [409, 404, 400]); });
+ok('recent-activity returns parsed details', () => { const r = run(R.get['/api/dashboard/recent-activity'], {}).out.body.rows; assert.equal(r[0].action_type, 'payment_reversed'); assert.equal(r[0].details.reason, 'wrong amount'); });
+ok('refunds and messages lists join customer data', () => { assert.equal(run(R.get['/api/refunds'], {}).out.body.rows[0].customer_name, 'Ali'); assert.equal(run(R.get['/api/messages'], { query: { search: 'switch' } }).out.body.total, 1); });
+ok('DB failure is a 500, not 404', () => { raw.exec('DROP TABLE refunds'); assert.equal(run(R.get['/api/refunds'], {}).out.code, 500); });
+console.log(`\n${n} tests passed`);
