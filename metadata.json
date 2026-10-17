@@ -1,0 +1,6 @@
+{
+  "name": "Customer Management & Order Tracking System",
+  "description": "Professional customer management, categorization, hardware requirements tracking, and order fulfillment system with instant phone capture and sequential tracking IDs.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
