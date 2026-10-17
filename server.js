@@ -12,7 +12,7 @@ import initSqlJs from 'sql.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const PORT = 3000;
+const PORT = parseInt(process.env.PORT || '3000', 10);
 const ROOT = __dirname;
 const DATA_DIR = path.join(ROOT, 'data');
 const BACKUP_DIR = path.join(ROOT, 'backups');
@@ -346,6 +346,8 @@ CREATE TABLE IF NOT EXISTS activity_logs (
   details_json TEXT,
   created_at   TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
 );
+CREATE TABLE IF NOT EXISTS schema_migrations (version INTEGER PRIMARY KEY, name TEXT NOT NULL, applied_at TEXT NOT NULL DEFAULT (datetime('now')));
+INSERT OR IGNORE INTO schema_migrations (version, name) VALUES (1, 'baseline schema v1.2');
 CREATE INDEX IF NOT EXISTS idx_log_customer ON activity_logs(customer_id);
 CREATE INDEX IF NOT EXISTS idx_log_order    ON activity_logs(order_id);
 
@@ -818,9 +820,10 @@ async function startServer() {
   app.get('/api/health', (req         , res          ) => {
     try {
       db.prepare('SELECT 1').get();
-      res.json({ ok: true, time: nowIso(), db: DB_PATH });
+      res.json({ status: 'ok', database: 'connected', ok: true, time: nowIso(), version: 3 });
     } catch (e     ) {
-      res.status(500).json({ ok: false, error: e.message });
+      console.error('[health] database check failed:', e.message);
+      res.status(503).json({ status: 'error', database: 'unavailable', ok: false, error: 'Database is not accessible' });
     }
   });
 
@@ -2072,10 +2075,15 @@ async function startServer() {
     res.status(status).json({ error: err.message || 'Internal server error' });
   });
 
-  app.listen(PORT, '127.0.0.1', () => {
+  const httpServer = app.listen(PORT, '127.0.0.1', () => {
     console.log(`\n  ⚡ Customer CRM & Order Register active at http://localhost:${PORT}`);
     console.log(`  📁 SQLite Database: ${DB_PATH}`);
     console.log(`  📦 Backups Directory: ${BACKUP_DIR}\n`);
+  });
+  httpServer.on('error', (e) => {
+    if (e.code === 'EADDRINUSE') console.error(`\n  [ERROR] Port ${PORT} is already in use. Another copy of the app (or another program) is running there.\n  Close it, or start with a different port:  set PORT=3001 && npm start\n`);
+    else console.error('[server] listen error:', e.message);
+    process.exit(1);
   });
 }
 
