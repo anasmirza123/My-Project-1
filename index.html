@@ -1,0 +1,2493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer CRM — Local</title>
+<style>
+/* ==========================================================================
+   1. DESIGN TOKENS
+   ========================================================================== */
+:root {
+  --bg: #f6f8fb;
+  --surface: #ffffff;
+  --surface-alt: #f9fafb;
+  --border: #e5e7eb;
+  --border-strong: #d1d5db;
+  --text: #0f172a;
+  --text-soft: #334155;
+  --muted: #64748b;
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-light: #eef2ff;
+  --success: #059669;
+  --success-light: #d1fae5;
+  --warning: #d97706;
+  --warning-light: #fef3c7;
+  --danger: #dc2626;
+  --danger-light: #fee2e2;
+  --info: #0284c7;
+  --info-light: #e0f2fe;
+  --sidebar-bg: #0f172a;
+  --sidebar-text: #cbd5e1;
+  --sidebar-hover: #1e293b;
+  --sidebar-active: #312e81;
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --shadow-xs: 0 1px 2px rgba(15,23,42,.04);
+  --shadow-sm: 0 1px 3px rgba(15,23,42,.06), 0 1px 2px rgba(15,23,42,.04);
+  --shadow: 0 4px 12px rgba(15,23,42,.08);
+  --shadow-lg: 0 20px 48px rgba(15,23,42,.18);
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --transition: 0.15s ease;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+a { color: var(--primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+button { font-family: inherit; cursor: pointer; }
+h1, h2, h3, h4 { line-height: 1.25; color: var(--text); font-weight: 700; }
+h2 { font-size: 22px; letter-spacing: -0.015em; }
+h3 { font-size: 15px; }
+h4 { font-size: 13px; }
+input, select, textarea { font-family: inherit; font-size: 14px; }
+::selection { background: var(--primary-light); color: var(--primary-hover); }
+
+/* Skip link */
+.skip-link {
+  position: absolute;
+  top: -50px;
+  left: 12px;
+  background: var(--primary);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  z-index: 9999;
+  font-weight: 600;
+  transition: top var(--transition);
+}
+.skip-link:focus { top: 12px; text-decoration: none; }
+
+/* ==========================================================================
+   2. LAYOUT
+   ========================================================================== */
+.app { display: flex; min-height: 100vh; }
+.sidebar {
+  width: 240px;
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 0 24px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+.sidebar h1 {
+  color: #fff;
+  font-size: 15px;
+  margin: 0 20px 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sidebar h1::before {
+  content: '';
+  width: 22px; height: 22px;
+  background: linear-gradient(135deg, var(--primary), #818cf8);
+  border-radius: 6px;
+}
+.sidebar nav { display: flex; flex-direction: column; flex: 1; }
+.sidebar .nav-group {
+  padding: 16px 20px 6px;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+  font-weight: 700;
+}
+.sidebar nav a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 20px;
+  color: var(--sidebar-text);
+  font-size: 13.5px;
+  border-left: 3px solid transparent;
+  transition: background var(--transition), color var(--transition);
+}
+.sidebar nav a:hover { background: var(--sidebar-hover); color: #fff; text-decoration: none; }
+.sidebar nav a.active {
+  background: var(--sidebar-hover);
+  color: #fff;
+  border-left-color: var(--primary);
+  font-weight: 600;
+}
+.sidebar nav a .nav-count {
+  margin-left: auto;
+  background: #334155;
+  color: #cbd5e1;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  min-width: 22px;
+  text-align: center;
+}
+.sidebar nav a.active .nav-count { background: var(--primary); color: #fff; }
+
+.main {
+  flex: 1;
+  min-width: 0;
+  padding: 26px 32px 40px;
+  max-width: 1400px;
+  width: 100%;
+}
+
+/* Mobile menu toggle & backdrop */
+.menu-toggle {
+  display: none;
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  z-index: 200;
+  width: 40px; height: 40px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 20px;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+}
+.menu-toggle:hover { background: var(--surface-alt); }
+.backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15,23,42,.5);
+  z-index: 150;
+}
+.backdrop.show { display: block; }
+
+/* ==========================================================================
+   3. PAGE HEADER
+   ========================================================================== */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+.page-header h2 { font-size: 24px; }
+.page-header .sub {
+  color: var(--muted);
+  font-size: 13.5px;
+  margin-top: 4px;
+  font-weight: 400;
+}
+.header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ==========================================================================
+   4. BUTTONS
+   ========================================================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  font-weight: 500;
+  background: var(--primary);
+  color: #fff;
+  transition: background var(--transition), border-color var(--transition), box-shadow var(--transition), transform 0.06s;
+  white-space: nowrap;
+  line-height: 1.35;
+}
+.btn:hover { background: var(--primary-hover); text-decoration: none; }
+.btn:active { transform: translateY(1px); }
+.btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--primary-light); }
+.btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+.btn.secondary { background: var(--primary-light); color: var(--primary-hover); border-color: transparent; }
+.btn.secondary:hover { background: #dbe3fe; }
+.btn.outline { background: transparent; color: var(--text); border-color: var(--border-strong); }
+.btn.outline:hover { background: var(--surface-alt); border-color: var(--border-strong); }
+.btn.ghost { background: transparent; color: var(--muted); }
+.btn.ghost:hover { background: var(--surface-alt); color: var(--text); }
+.btn.success { background: var(--success); }
+.btn.success:hover { background: #047857; }
+.btn.danger { background: var(--danger); }
+.btn.danger:hover { background: #b91c1c; }
+.btn.danger-ghost { background: transparent; color: var(--danger); }
+.btn.danger-ghost:hover { background: var(--danger-light); }
+.btn.small { padding: 5px 10px; font-size: 12px; }
+.btn.icon { padding: 6px 8px; }
+.btn .spinner {
+  width: 12px; height: 12px;
+  border: 2px solid rgba(255,255,255,.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Copy button */
+.copy-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  padding: 2px 6px;
+  font-size: 12px;
+  border-radius: 4px;
+  transition: background var(--transition), color var(--transition);
+  cursor: pointer;
+}
+.copy-btn:hover { color: var(--primary); background: var(--primary-light); }
+
+/* ==========================================================================
+   5. PANELS & CARDS
+   ========================================================================== */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-xs);
+}
+.panel h3 { margin-bottom: 14px; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+.panel .panel-actions { margin-left: auto; display: flex; gap: 6px; }
+
+/* Stat cards */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 22px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  cursor: pointer;
+  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--primary);
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+  border-color: var(--border-strong);
+  text-decoration: none;
+}
+.stat-card:hover::after { opacity: 1; }
+.stat-card .num {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--primary);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+.stat-card .lbl {
+  color: var(--muted);
+  font-size: 12.5px;
+  margin-top: 6px;
+  font-weight: 500;
+}
+.stat-card.success .num { color: var(--success); }
+.stat-card.success::after { background: var(--success); }
+.stat-card.warning .num { color: var(--warning); }
+.stat-card.warning::after { background: var(--warning); }
+.stat-card.info .num { color: var(--info); }
+.stat-card.info::after { background: var(--info); }
+
+/* ==========================================================================
+   6. QUICK ENTRY
+   ========================================================================== */
+.quick-entry {
+  background: linear-gradient(135deg, #4338ca 0%, var(--primary) 100%);
+  color: #fff;
+  border-radius: var(--radius-lg);
+  padding: 24px 26px;
+  margin-bottom: 22px;
+  box-shadow: 0 8px 28px rgba(79,70,229,.24);
+}
+.quick-entry h3 { color: #fff; margin-bottom: 4px; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+.quick-entry p { color: #c7d2fe; font-size: 13px; margin-bottom: 14px; }
+.quick-entry form { display: flex; gap: 10px; flex-wrap: wrap; }
+.quick-entry input {
+  flex: 1;
+  min-width: 240px;
+  padding: 12px 14px;
+  font-size: 15px;
+  border: none;
+  border-radius: 8px;
+  color: var(--text);
+  background: #fff;
+}
+.quick-entry input:focus { outline: none; box-shadow: 0 0 0 3px rgba(255,255,255,.4); }
+.quick-entry .btn { background: #fff; color: var(--primary-hover); font-weight: 600; padding: 10px 22px; font-size: 14px; }
+.quick-entry .btn:hover { background: var(--primary-light); }
+.quick-entry .btn:disabled { background: #fff; opacity: .8; }
+.quick-entry .msg { margin-top: 12px; font-size: 13px; color: #c7d2fe; min-height: 18px; }
+.quick-entry .msg.error { color: #fecaca; }
+.quick-entry .msg a { color: #fff; text-decoration: underline; font-weight: 600; }
+
+/* ==========================================================================
+   7. TOOLBAR
+   ========================================================================== */
+.toolbar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  align-items: center;
+}
+.toolbar .search-input {
+  flex: 1;
+  min-width: 200px;
+  max-width: 380px;
+  padding: 9px 12px 9px 34px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface) url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E") no-repeat 12px center;
+}
+.toolbar .search-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,.12); }
+.toolbar select { padding: 9px 12px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--surface); }
+.toolbar select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,.12); }
+.toolbar .date-input {
+  padding: 9px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-soft);
+}
+
+/* ==========================================================================
+   8. TABLES
+   ========================================================================== */
+.table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow-x: auto;
+  box-shadow: var(--shadow-xs);
+}
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th, td { padding: 11px 14px; text-align: left; vertical-align: middle; border-bottom: 1px solid var(--border); }
+th {
+  background: var(--surface-alt);
+  font-weight: 600;
+  color: var(--text-soft);
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--surface-alt); }
+td.mono, .mono { font-family: var(--mono); font-size: 13px; }
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--muted);
+  flex-wrap: wrap;
+}
+.pagination .pages { font-weight: 500; color: var(--text-soft); }
+
+/* ==========================================================================
+   9. EMPTY / LOADING / ERROR
+   ========================================================================== */
+.empty {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--muted);
+}
+.empty-icon {
+  font-size: 40px;
+  color: var(--border-strong);
+  margin-bottom: 12px;
+  display: block;
+  line-height: 1;
+}
+.empty h4 { font-size: 15px; color: var(--text); margin-bottom: 4px; }
+.empty p { font-size: 13.5px; margin-bottom: 16px; }
+.loading { padding: 48px 24px; text-align: center; color: var(--muted); font-size: 14px; }
+.loading::after {
+  content: '';
+  display: inline-block;
+  width: 14px; height: 14px;
+  margin-left: 8px;
+  border: 2px solid var(--border-strong);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  vertical-align: middle;
+}
+.error-box {
+  background: var(--danger-light);
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  padding: 14px 18px;
+  border-radius: var(--radius);
+  margin: 12px 0;
+  font-size: 13.5px;
+}
+.info-box {
+  background: var(--info-light);
+  border: 1px solid #bae6fd;
+  color: #075985;
+  padding: 14px 18px;
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  font-size: 13.5px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.info-box.success {
+  background: var(--success-light);
+  border-color: #a7f3d0;
+  color: #065f46;
+}
+
+/* ==========================================================================
+   10. BADGES
+   ========================================================================== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 9px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 600;
+  background: var(--primary-light);
+  color: var(--primary-hover);
+  line-height: 1.7;
+  white-space: nowrap;
+}
+.badge::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: .65;
+}
+.badge.plain::before { display: none; }
+.badge.wholesale { background: var(--warning-light); color: #92400e; }
+.badge.retail { background: var(--success-light); color: #065f46; }
+.badge.lead { background: #dbeafe; color: #1e40af; }
+.badge.other { background: #f3f4f6; color: #4b5563; }
+.badge.completed { background: var(--success-light); color: #065f46; }
+.badge.draft { background: #f3f4f6; color: #4b5563; }
+.badge.confirmed { background: var(--info-light); color: #075985; }
+.badge.cancelled { background: var(--danger-light); color: #991b1b; }
+.badge.active { background: var(--success-light); color: #065f46; }
+.badge.inactive { background: #f3f4f6; color: #6b7280; }
+.badge.archived { background: #f3f4f6; color: #9ca3af; }
+
+/* ==========================================================================
+   11. FORMS
+   ========================================================================== */
+label {
+  display: block;
+  font-size: 12.5px;
+  color: var(--text-soft);
+  margin-bottom: 5px;
+  font-weight: 600;
+}
+label .req { color: var(--danger); margin-left: 2px; }
+input[type="text"], input[type="tel"], input[type="email"],
+input[type="number"], input[type="search"], input[type="date"],
+select, textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(79,70,229,.12);
+}
+input.invalid, select.invalid, textarea.invalid { border-color: var(--danger); }
+input.invalid:focus, textarea.invalid:focus { box-shadow: 0 0 0 3px rgba(220,38,38,.12); }
+textarea { min-height: 74px; resize: vertical; }
+.form-row { margin-bottom: 14px; }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.form-grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.form-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+fieldset { border: none; }
+.form-hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.field-error { font-size: 12px; color: var(--danger); margin-top: 4px; font-weight: 500; }
+
+/* Category checkboxes */
+.cat-checks { display: flex; flex-wrap: wrap; gap: 8px; }
+.cat-checks label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text);
+  margin: 0;
+  transition: all var(--transition);
+  background: var(--surface);
+  font-weight: 500;
+}
+.cat-checks label:hover { border-color: var(--primary); }
+.cat-checks input { display: none; }
+.cat-checks input:checked + span { color: var(--primary-hover); }
+.cat-checks label:has(input:checked) {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary-hover);
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   12. TABS
+   ========================================================================== */
+.tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tabs button {
+  background: none;
+  border: none;
+  padding: 10px 16px;
+  font-size: 13.5px;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  font-weight: 500;
+  transition: color var(--transition), border-color var(--transition);
+}
+.tabs button:hover { color: var(--text); }
+.tabs button.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+.tab-panel { display: none; animation: fadeIn 0.18s ease-out; }
+.tab-panel.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* ==========================================================================
+   13. INFO GRID
+   ========================================================================== */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+.info-item .lbl {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 3px;
+  font-weight: 700;
+}
+.info-item .val { font-size: 14px; color: var(--text); word-break: break-word; }
+.info-item .val.strong { font-weight: 600; }
+
+/* ==========================================================================
+   14. TOAST
+   ========================================================================== */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 12px 18px;
+  background: var(--text);
+  color: #fff;
+  border-radius: var(--radius);
+  font-size: 13.5px;
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity .22s, transform .22s;
+  pointer-events: none;
+  z-index: 2000;
+  max-width: calc(100vw - 48px);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.toast::before {
+  content: 'ℹ';
+  font-size: 15px;
+  font-weight: 700;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.success { background: var(--success); }
+.toast.success::before { content: '✓'; }
+.toast.error { background: var(--danger); }
+.toast.error::before { content: '⚠'; }
+.toast.info { background: var(--info); }
+
+/* ==========================================================================
+   15. MODALS
+   ========================================================================== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,23,42,.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn .15s ease-out;
+  backdrop-filter: blur(2px);
+}
+.modal-overlay[hidden] { display: none; }
+.modal {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  max-width: 560px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp .22s ease-out;
+}
+@keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+.modal-head {
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.modal-head h3 { font-size: 16px; }
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0 4px;
+  width: 32px; height: 32px;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-close:hover { color: var(--text); background: var(--surface-alt); }
+.modal-body { padding: 20px 22px; }
+.modal-body p { margin-bottom: 12px; color: var(--text-soft); }
+.modal-body ul { padding-left: 22px; margin: 8px 0 14px; color: var(--text-soft); }
+.modal-body li { margin-bottom: 5px; }
+.modal-foot {
+  padding: 14px 22px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  background: var(--surface-alt);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+.summary {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin: 14px 0;
+  font-size: 13.5px;
+}
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  gap: 16px;
+}
+.summary-row.total {
+  border-top: 1px solid var(--border-strong);
+  margin-top: 6px;
+  padding-top: 10px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.warn-note {
+  color: var(--warning);
+  font-size: 12.5px;
+  margin-top: 12px;
+  background: var(--warning-light);
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #fcd34d;
+}
+
+/* ==========================================================================
+   16. UTILITIES
+   ========================================================================== */
+.flex { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.muted { color: var(--muted); }
+.mono { font-family: var(--mono); }
+.strong { font-weight: 600; }
+.right { text-align: right; }
+.mt-2 { margin-top: 8px; }
+.mt-4 { margin-top: 16px; }
+.mb-2 { margin-bottom: 8px; }
+.mb-4 { margin-bottom: 16px; }
+.hidden { display: none !important; }
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+
+/* ==========================================================================
+   17. PRINT
+   ========================================================================== */
+@media print {
+  .sidebar, .menu-toggle, .header-actions, .tabs, .toast, .modal-overlay { display: none !important; }
+  .main { padding: 0; }
+  .panel { box-shadow: none; border: 1px solid #ddd; }
+  body { background: #fff; }
+}
+
+/* ==========================================================================
+   18. RESPONSIVE
+   ========================================================================== */
+@media (max-width: 900px) {
+  .form-grid.cols-2 { grid-template-columns: 1fr; }
+}
+@media (max-width: 820px) {
+  .menu-toggle { display: flex; }
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    z-index: 200;
+    width: 260px;
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+    box-shadow: var(--shadow-lg);
+    height: 100vh;
+  }
+  .sidebar.open { transform: translateX(0); }
+  .main { padding: 68px 16px 32px; max-width: 100%; }
+  .page-header h2 { font-size: 20px; }
+}
+@media (max-width: 640px) {
+  .stat-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+  .stat-card { padding: 14px; }
+  .stat-card .num { font-size: 22px; }
+  .quick-entry { padding: 20px; }
+  .quick-entry form { flex-direction: column; }
+  .quick-entry input { min-width: 100%; }
+  .toolbar { flex-direction: column; align-items: stretch; }
+  .toolbar .search-input, .toolbar select, .toolbar .date-input { max-width: 100%; }
+  th, td { padding: 8px 10px; font-size: 12.5px; }
+  .modal { max-height: 92vh; }
+  .modal-head, .modal-body, .modal-foot { padding: 16px; }
+  .info-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<a href="#main" class="skip-link">Skip to content</a>
+
+<button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation menu" aria-expanded="false">☰</button>
+<div class="backdrop" id="backdrop"></div>
+
+<div class="app">
+  <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+    <h1>Customer CRM</h1>
+    <nav id="nav">
+      <!-- Injected by JS -->
+    </nav>
+  </aside>
+  <main id="main" class="main" tabindex="-1">
+    <div class="loading">Loading</div>
+  </main>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<div id="modal" class="modal-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle"></div>
+
+<script>
+/* ==========================================================================
+   CONFIG & STATE
+   ========================================================================== */
+const API = '/api';
+const TZ = 'Asia/Karachi';
+
+const state = {
+  navCounts: {},
+  isDirty: false,
+  lastHash: location.hash || '#/',
+  revertingHash: false,
+};
+
+/* ==========================================================================
+   NAV DEFINITION
+   ========================================================================== */
+const NAV_ITEMS = [
+  { group: '' },
+  { key: 'dashboard', href: '#/', label: 'Dashboard', icon: '▦' },
+  { key: 'customers', href: '#/customers', label: 'All Customers', icon: '☰', countKey: 'all_customers' },
+  { key: 'wholesale', href: '#/customers?category=Wholesale', label: 'Wholesale', icon: '▣', countKey: 'wholesale' },
+  { key: 'retail', href: '#/customers?category=Retail', label: 'Retail', icon: '▢', countKey: 'retail' },
+  { key: 'leads', href: '#/customers?category=Lead', label: 'Leads', icon: '◐', countKey: 'leads' },
+  { key: 'previous', href: '#/customers?filter=previous', label: 'Previous Customers', icon: '✓', countKey: 'previous_customers' },
+  { key: 'hardware', href: '#/hardware', label: 'Hardware Reqs', icon: '⚙', countKey: 'hardware_requirements' },
+  { group: 'Orders' },
+  { key: 'orders', href: '#/orders', label: 'All Orders', icon: '▤' },
+  { key: 'drafts', href: '#/orders?status=draft', label: 'Draft Orders', icon: '✎', countKey: 'draft_orders' },
+  { key: 'pending', href: '#/orders?status=confirmed', label: 'Pending Orders', icon: '◷', countKey: 'pending_orders' },
+  { key: 'inprogress', href: '#/orders?progress=1', label: 'In Progress', icon: '⟳', countKey: 'orders_in_progress' },
+  { key: 'completed', href: '#/orders?finalized=1', label: 'Completed', icon: '★', countKey: 'completed_orders' },
+  { key: 'cancelled', href: '#/orders?status=cancelled', label: 'Cancelled', icon: '✕', countKey: 'cancelled_orders' },
+  { group: 'System' },
+  { key: 'backup', href: '#/backup', label: 'Backup & Restore', icon: '⌸' },
+  { key: 'settings', href: '#/settings', label: 'Settings', icon: '⚙' },
+];
+
+function renderNav(activeKey) {
+  const nav = document.getElementById('nav');
+  nav.innerHTML = NAV_ITEMS.map(item => {
+    if (item.group !== undefined) return item.group ? `<div class="nav-group">${item.group}</div>` : '';
+    const count = item.countKey && state.navCounts[item.countKey];
+    return `<a href="${item.href}" data-nav="${item.key}" class="${item.key === activeKey ? 'active' : ''}">
+      <span aria-hidden="true">${item.icon}</span>
+      <span>${item.label}</span>
+      ${count ? `<span class="nav-count">${count}</span>` : ''}
+    </a>`;
+  }).join('');
+}
+
+/* ==========================================================================
+   API CLIENT
+   ========================================================================== */
+async function api(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  const fetchOpts = { ...opts, headers };
+  if (opts.body && typeof opts.body !== 'string') fetchOpts.body = JSON.stringify(opts.body);
+  let res;
+  try {
+    res = await fetch(API + path, fetchOpts);
+  } catch (netErr) {
+    throw new Error('Cannot reach the server. Is the app still running?');
+  }
+  let data = null;
+  const ct = res.headers.get('content-type') || '';
+  if (ct.includes('application/json')) {
+    try { data = await res.json(); } catch (_) {}
+  }
+  if (!res.ok) {
+    const msg = (data && data.error) || `Request failed (${res.status})`;
+    throw Object.assign(new Error(msg), { status: res.status, data });
+  }
+  return data;
+}
+
+/* ==========================================================================
+   FORMATTERS
+   ========================================================================== */
+function esc(s) {
+  if (s === null || s === undefined) return '';
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+function fmtDate(iso) {
+  if (!iso) return '';
+  return new Intl.DateTimeFormat('en-GB', {
+    timeZone: TZ, day: '2-digit', month: 'short', year: 'numeric'
+  }).format(new Date(iso));
+}
+function fmtTime(iso) {
+  if (!iso) return '';
+  return new Intl.DateTimeFormat('en-GB', {
+    timeZone: TZ, hour: '2-digit', minute: '2-digit', hour12: true
+  }).format(new Date(iso));
+}
+function fmtDay(iso) {
+  if (!iso) return '';
+  return new Intl.DateTimeFormat('en-GB', { timeZone: TZ, weekday: 'long' }).format(new Date(iso));
+}
+function fmtDateTime(iso) {
+  if (!iso) return '';
+  return `${fmtDate(iso)} · ${fmtTime(iso)} · ${fmtDay(iso)}`;
+}
+function fmtMoney(minor, currency = 'PKR') {
+  if (minor === null || minor === undefined) return '';
+  return `${currency} ${(minor / 100).toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+function custCode(id) { return 'C-' + String(id).padStart(4, '0'); }
+function toMinor(amount) {
+  const n = parseFloat(amount);
+  return isFinite(n) ? Math.round(n * 100) : 0;
+}
+function escMulti(str) {
+  return str ? String(str).split(',').filter(Boolean).map(s => esc(s.trim())) : [];
+}
+
+/* ==========================================================================
+   TOAST
+   ========================================================================== */
+let toastTimer;
+function toast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+}
+
+/* ==========================================================================
+   MODAL with focus trap
+   ========================================================================== */
+let lastFocusEl = null;
+function openModal(html) {
+  const m = document.getElementById('modal');
+  m.innerHTML = html;
+  m.hidden = false;
+  lastFocusEl = document.activeElement;
+  const focusables = m.querySelectorAll(
+    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+  );
+  const first = focusables[0];
+  if (first) setTimeout(() => first.focus(), 30);
+
+  m.querySelectorAll('[data-close]').forEach(b => b.onclick = closeModal);
+  const handleKey = (e) => {
+    if (e.key === 'Escape') { e.preventDefault(); closeModal(); }
+    if (e.key === 'Tab' && focusables.length > 1) {
+      const firstEl = focusables[0], lastEl = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === firstEl) { e.preventDefault(); lastEl.focus(); }
+      else if (!e.shiftKey && document.activeElement === lastEl) { e.preventDefault(); firstEl.focus(); }
+    }
+  };
+  m._keyHandler = handleKey;
+  m._backdropHandler = (e) => { if (e.target === m) closeModal(); };
+  m.addEventListener('keydown', handleKey);
+  m.addEventListener('click', m._backdropHandler);
+}
+function closeModal() {
+  const m = document.getElementById('modal');
+  if (m._keyHandler) m.removeEventListener('keydown', m._keyHandler);
+  if (m._backdropHandler) m.removeEventListener('click', m._backdropHandler);
+  m.hidden = true;
+  m.innerHTML = '';
+  if (lastFocusEl && document.body.contains(lastFocusEl)) lastFocusEl.focus();
+}
+
+/* ==========================================================================
+   VIEW HELPERS
+   ========================================================================== */
+const viewEl = () => document.getElementById('main');
+function setView(html) { viewEl().innerHTML = html; }
+function showLoading() { setView('<div class="loading">Loading</div>'); }
+function showError(msg) { setView(`<div class="error-box">${esc(msg)}</div>`); }
+function emptyState({ icon = '◇', title, message, action }) {
+  return `<div class="empty">
+    <span class="empty-icon">${icon}</span>
+    <h4>${esc(title)}</h4>
+    <p>${esc(message)}</p>
+    ${action || ''}
+  </div>`;
+}
+
+/* ==========================================================================
+   MOBILE MENU
+   ========================================================================== */
+function initMobileMenu() {
+  const toggle = document.getElementById('menuToggle');
+  const sidebar = document.getElementById('sidebar');
+  const backdrop = document.getElementById('backdrop');
+  const close = () => {
+    sidebar.classList.remove('open');
+    backdrop.classList.remove('show');
+    toggle.setAttribute('aria-expanded', 'false');
+  };
+  toggle.onclick = () => {
+    const isOpen = sidebar.classList.toggle('open');
+    backdrop.classList.toggle('show', isOpen);
+    toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  };
+  backdrop.onclick = close;
+  sidebar.addEventListener('click', (e) => {
+    if (e.target.closest('a')) close();
+  });
+}
+
+/* ==========================================================================
+   ROUTER
+   ========================================================================== */
+async function route() {
+  const hash = location.hash.slice(1) || '/';
+  const [pathPart, queryPart] = hash.split('?');
+  const params = new URLSearchParams(queryPart || '');
+  const parts = pathPart.split('/').filter(Boolean);
+
+  // Determine active nav key
+  let activeKey = 'dashboard';
+  if (parts[0] === 'customers') {
+    activeKey = params.get('category')?.toLowerCase() ||
+      (params.get('filter') === 'previous' ? 'previous' : 'customers');
+  } else if (parts[0] === 'customer') {
+    activeKey = 'customers';
+  } else if (parts[0] === 'orders') {
+    if (params.get('finalized')) activeKey = 'completed';
+    else if (params.get('status') === 'draft') activeKey = 'drafts';
+    else if (params.get('status') === 'confirmed') activeKey = 'pending';
+    else if (params.get('status') === 'cancelled') activeKey = 'cancelled';
+    else if (params.get('progress')) activeKey = 'inprogress';
+    else activeKey = 'orders';
+  } else if (parts[0] === 'order') {
+    activeKey = 'orders';
+  } else if (parts[0] === 'hardware') {
+    activeKey = 'hardware';
+  } else if (parts[0] === 'backup') {
+    activeKey = 'backup';
+  } else if (parts[0] === 'settings') {
+    activeKey = 'settings';
+  }
+
+  renderNav(activeKey);
+
+  // Load counts for sidebar
+  refreshNavCounts();
+
+  try {
+    if (parts.length === 0) return await viewDashboard();
+    const [root, id] = parts;
+    switch (root) {
+      case 'customers': return await viewCustomers(params);
+      case 'customer': return await viewCustomerDetails(Number(id), params);
+      case 'orders': return await viewOrders(params);
+      case 'order': return await viewOrderDetails(Number(id));
+      case 'hardware': return await viewHardware();
+      case 'backup': return await viewBackup();
+      case 'settings': return await viewSettings();
+      default: setView(emptyState({
+        title: 'Page not found',
+        message: 'The requested page does not exist.',
+        action: '<a class="btn" href="#/">Go to Dashboard</a>',
+      }));
+    }
+  } catch (e) {
+    console.error(e);
+    showError(e.message || 'Something went wrong');
+  }
+}
+
+async function refreshNavCounts() {
+  try {
+    const { counts } = await api('/dashboard/stats');
+    state.navCounts = counts;
+    renderNav(null, true);
+    // Re-apply active class
+    const hash = location.hash.slice(1) || '/';
+    const [pathPart, queryPart] = hash.split('?');
+    const params = new URLSearchParams(queryPart || '');
+    const parts = pathPart.split('/').filter(Boolean);
+    let activeKey = 'dashboard';
+    if (parts[0] === 'customers') activeKey = params.get('category')?.toLowerCase() || (params.get('filter') === 'previous' ? 'previous' : 'customers');
+    else if (parts[0] === 'customer') activeKey = 'customers';
+    else if (parts[0] === 'orders') {
+      if (params.get('finalized')) activeKey = 'completed';
+      else if (params.get('status') === 'draft') activeKey = 'drafts';
+      else if (params.get('status') === 'confirmed') activeKey = 'pending';
+      else if (params.get('status') === 'cancelled') activeKey = 'cancelled';
+      else if (params.get('progress')) activeKey = 'inprogress';
+      else activeKey = 'orders';
+    }
+    else if (parts[0] === 'order') activeKey = 'orders';
+    else if (parts[0] === 'hardware') activeKey = 'hardware';
+    else if (parts[0] === 'backup') activeKey = 'backup';
+    else if (parts[0] === 'settings') activeKey = 'settings';
+    document.querySelectorAll('#nav a').forEach(a => {
+      a.classList.toggle('active', a.dataset.nav === activeKey);
+    });
+  } catch (_) { /* silent */ }
+}
+
+/* ==========================================================================
+   DASHBOARD
+   ========================================================================== */
+async function viewDashboard() {
+  showLoading();
+  const { counts, recentCustomers, recentOrders, recentlyFinalized } = await api('/dashboard/stats');
+
+  const today = new Intl.DateTimeFormat('en-GB', {
+    timeZone: TZ, weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  }).format(new Date());
+
+  const cards = [
+    { n: counts.all_customers, l: 'All Customers', href: '#/customers', cls: '' },
+    { n: counts.wholesale, l: 'Wholesale', href: '#/customers?category=Wholesale', cls: '' },
+    { n: counts.retail, l: 'Retail', href: '#/customers?category=Retail', cls: '' },
+    { n: counts.leads, l: 'Leads', href: '#/customers?category=Lead', cls: '' },
+    { n: counts.previous_customers, l: 'Previous Customers', href: '#/customers?filter=previous', cls: 'success' },
+    { n: counts.orders_in_progress, l: 'Orders in Progress', href: '#/orders?progress=1', cls: 'warning' },
+    { n: counts.completed_orders, l: 'Completed Orders', href: '#/orders?finalized=1', cls: 'success' },
+    { n: counts.hardware_requirements, l: 'Hardware Reqs', href: '#/hardware', cls: 'info' },
+    { n: counts.uncategorized, l: 'Uncategorized', href: '#/customers?filter=uncategorized', cls: 'warning' },
+  ];
+
+  setView(`
+    <div class="page-header">
+      <div>
+        <h2>Welcome back</h2>
+        <div class="sub">${esc(today)} · Save a number instantly, categorize later.</div>
+      </div>
+      <div class="header-actions">
+        <input id="globalSearch" type="search" class="search-input" placeholder="Search phone, name, tracking ID, order #…" style="width:320px" aria-label="Global search">
+      </div>
+    </div>
+
+    <div id="globalResults"></div>
+
+    <div class="quick-entry">
+      <h3><span aria-hidden="true">＋</span> Save a new phone number</h3>
+      <p>The phone number alone is enough. Add details later whenever you have them.</p>
+      <form id="quickForm" novalidate>
+        <input id="quickPhone" type="tel" placeholder="e.g. 0300 1234567 or +92 300 1234567" autocomplete="off" required aria-label="Phone number">
+        <button class="btn" type="submit" id="quickSave">Save Number</button>
+      </form>
+      <div class="msg" id="quickMsg"></div>
+    </div>
+
+    <div class="stat-grid">
+      ${cards.map(c => `
+        <a class="stat-card ${c.cls}" href="${c.href}">
+          <div class="num">${c.n}</div>
+          <div class="lbl">${esc(c.l)}</div>
+        </a>
+      `).join('')}
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <h3>Recent Customers</h3>
+        ${recentCustomers.length
+          ? `<div class="table-wrap"><table><tbody>
+              ${recentCustomers.map(c => `
+                <tr style="cursor:pointer" onclick="location.hash='#/customer/${c.id}'">
+                  <td>${custCode(c.id)}</td>
+                  <td class="mono">${esc(c.phone)}</td>
+                  <td>${esc(c.name || '—')}</td>
+                  <td class="muted">${fmtDate(c.created_at)}</td>
+                </tr>
+              `).join('')}
+            </tbody></table></div>`
+          : emptyState({
+              icon: '👤', title: 'No customers yet',
+              message: 'Save your first phone number above to get started.',
+            })}
+      </div>
+      <div class="panel">
+        <h3>Recent Orders</h3>
+        ${recentOrders.length
+          ? `<div class="table-wrap"><table><tbody>
+              ${recentOrders.map(o => `
+                <tr style="cursor:pointer" onclick="location.hash='#/order/${o.id}'">
+                  <td>#${o.id}</td>
+                  <td>${esc(o.customer_name || o.phone)}</td>
+                  <td><span class="badge ${o.status}">${o.status}</span></td>
+                  <td class="muted">${fmtDate(o.created_at)}</td>
+                </tr>
+              `).join('')}
+            </tbody></table></div>`
+          : emptyState({
+              icon: '🧾', title: 'No orders yet',
+              message: 'Open a customer and click “New Order” to create one.',
+            })}
+      </div>
+    </div>
+
+    ${recentlyFinalized.length ? `
+      <div class="panel">
+        <h3>Recently Finalized</h3>
+        <div class="table-wrap"><table>
+          <thead><tr>
+            <th>Tracking ID</th><th>Customer</th><th>Final Price</th>
+            <th>Finalized</th><th></th>
+          </tr></thead>
+          <tbody>${recentlyFinalized.map(o => `
+            <tr>
+              <td class="mono">${esc(o.tracking_id)}
+                <button class="copy-btn" data-copy="${esc(o.tracking_id)}" aria-label="Copy tracking ID">⧉</button></td>
+              <td>${esc(o.customer_name || o.phone)}</td>
+              <td>${o.final_price_minor != null ? fmtMoney(o.final_price_minor, o.currency) : '—'}</td>
+              <td class="muted" style="font-size:12.5px">${fmtDate(o.finalized_at)} · ${fmtTime(o.finalized_at)}<br>${fmtDay(o.finalized_at)}</td>
+              <td><a class="btn small secondary" href="#/order/${o.id}">Open</a></td>
+            </tr>
+          `).join('')}</tbody>
+        </table></div>
+      </div>
+    ` : ''}
+  `);
+
+  // Quick save
+  const form = document.getElementById('quickForm');
+  const input = document.getElementById('quickPhone');
+  const btn = document.getElementById('quickSave');
+  const msg = document.getElementById('quickMsg');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const phone = input.value.trim();
+    if (!phone) { input.focus(); return; }
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Saving';
+    msg.className = 'msg';
+    msg.textContent = '';
+    try {
+      const res = await api('/customers', { method: 'POST', body: { phone } });
+      if (res.duplicate) {
+        msg.className = 'msg error';
+        msg.innerHTML = `This number already exists (${custCode(res.customer.id)}). <a href="#/customer/${res.customer.id}">Open record</a>`;
+        btn.disabled = false;
+        btn.textContent = 'Save Number';
+        return;
+      }
+      toast('Customer saved ✓', 'success');
+      input.value = '';
+      location.hash = `#/customer/${res.customer.id}?new=1`;
+    } catch (err) {
+      msg.className = 'msg error';
+      msg.textContent = err.message;
+      btn.disabled = false;
+      btn.textContent = 'Save Number';
+    }
+  });
+
+  // Copy buttons
+  document.querySelectorAll('[data-copy]').forEach(b => {
+    b.onclick = (e) => {
+      e.stopPropagation();
+      navigator.clipboard.writeText(b.dataset.copy)
+        .then(() => toast('Copied ✓', 'success'))
+        .catch(() => toast('Copy failed', 'error'));
+    };
+  });
+
+  // Global search
+  const searchInput = document.getElementById('globalSearch');
+  const results = document.getElementById('globalResults');
+  let timer;
+  searchInput.addEventListener('input', () => {
+    clearTimeout(timer);
+    timer = setTimeout(async () => {
+      const q = searchInput.value.trim();
+      if (!q) { results.innerHTML = ''; return; }
+      try {
+        const { customers, orders } = await api('/search?q=' + encodeURIComponent(q));
+        if (!customers.length && !orders.length) {
+          results.innerHTML = `<div class="panel"><div class="empty">
+            <span class="empty-icon">🔍</span>
+            <h4>No results for "${esc(q)}"</h4>
+            <p>Try a different phone number, name, or tracking ID.</p>
+          </div></div>`;
+          return;
+        }
+        let html = '';
+        if (customers.length) {
+          html += `<div class="panel"><h3>Customers</h3><div class="table-wrap"><table>
+            <thead><tr><th>Code</th><th>Phone</th><th>Name</th><th>Created</th></tr></thead>
+            <tbody>${customers.map(c => `<tr style="cursor:pointer" onclick="location.hash='#/customer/${c.id}'">
+              <td>${custCode(c.id)}</td><td class="mono">${esc(c.phone)}</td>
+              <td>${esc(c.name || '—')}</td><td class="muted">${fmtDate(c.created_at)}</td>
+            </tr>`).join('')}</tbody></table></div></div>`;
+        }
+        if (orders.length) {
+          html += `<div class="panel"><h3>Orders</h3><div class="table-wrap"><table>
+            <thead><tr><th>Tracking</th><th>#</th><th>Customer</th><th>Status</th></tr></thead>
+            <tbody>${orders.map(o => `<tr style="cursor:pointer" onclick="location.hash='#/order/${o.id}'">
+              <td class="mono">${esc(o.tracking_id || '—')}</td><td>${o.id}</td>
+              <td>${esc(o.customer_name || o.phone)}</td>
+              <td><span class="badge ${o.status}">${o.status}</span></td>
+            </tr>`).join('')}</tbody></table></div></div>`;
+        }
+        results.innerHTML = html;
+      } catch (err) {
+        results.innerHTML = `<div class="error-box">Search failed: ${esc(err.message)}</div>`;
+      }
+    }, 250);
+  });
+}
+
+/* ==========================================================================
+   CUSTOMERS LIST
+   ========================================================================== */
+async function viewCustomers(params) {
+  const category = params.get('category') || '';
+  const filter = params.get('filter') || '';
+  let title = 'All Customers';
+  if (category) title = category + ' Customers';
+  else if (filter === 'previous') title = 'Previous Customers';
+  else if (filter === 'hardware') title = 'Customers with Hardware Requirements';
+  else if (filter === 'uncategorized') title = 'Uncategorized Records';
+
+  setView(`
+    <div class="page-header">
+      <div><h2>${esc(title)}</h2><div class="sub" id="countLine">Loading…</div></div>
+      <div class="header-actions">
+        <a class="btn" href="#/">+ Add Customer</a>
+      </div>
+    </div>
+    <div class="toolbar">
+      <input id="cSearch" type="search" class="search-input" placeholder="Search phone, WhatsApp, name…" aria-label="Search customers">
+      <select id="cStatus" aria-label="Filter by status">
+        <option value="">All statuses</option>
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+      </select>
+      <input id="cFrom" type="date" class="date-input" aria-label="Created from">
+      <input id="cTo" type="date" class="date-input" aria-label="Created to">
+    </div>
+    <div id="cTable" class="table-wrap"><div class="loading">Loading</div></div>
+    <div id="cPager" class="pagination"></div>
+  `);
+
+  let search = '', status = '', from = '', to = '', offset = 0;
+  const limit = 50;
+
+  async function load() {
+    const p = new URLSearchParams();
+    if (category) p.set('category', category);
+    if (filter) p.set('filter', filter);
+    if (search) p.set('search', search);
+    if (status) p.set('status', status);
+    if (from) p.set('from', from);
+    if (to) p.set('to', to);
+    p.set('limit', limit); p.set('offset', offset);
+
+    const { rows, total } = await api('/customers?' + p.toString());
+    document.getElementById('countLine').textContent = `${total} record(s)`;
+    const wrap = document.getElementById('cTable');
+    if (!rows.length) {
+      wrap.innerHTML = emptyState({
+        icon: '👥', title: 'No customers match this filter',
+        message: 'Try clearing filters or add a new customer from the dashboard.',
+        action: '<a class="btn" href="#/">Go to Dashboard</a>',
+      });
+      document.getElementById('cPager').innerHTML = '';
+      return;
+    }
+    wrap.innerHTML = `<table>
+      <thead><tr>
+        <th>Code</th><th>Phone</th><th>WhatsApp</th><th>Name</th>
+        <th>Categories</th><th>Status</th><th>Orders</th><th>Created</th><th></th>
+      </tr></thead>
+      <tbody>${rows.map(c => {
+        const cats = escMulti(c.category_list);
+        const catBadges = cats.length
+          ? cats.map(x => `<span class="badge ${x.toLowerCase()}">${x}</span>`).join(' ')
+          : '<span class="muted">—</span>';
+        return `<tr>
+          <td>${custCode(c.id)}</td>
+          <td class="mono">${esc(c.phone)}
+            <button class="copy-btn" data-copy="${esc(c.phone)}" aria-label="Copy phone">⧉</button></td>
+          <td class="mono">${c.whatsapp
+            ? esc(c.whatsapp) + ` <button class="copy-btn" data-copy="${esc(c.whatsapp)}" aria-label="Copy WhatsApp">⧉</button>`
+            : '<span class="muted">—</span>'}</td>
+          <td>${esc(c.name || '<span class="muted">Name not added</span>')}</td>
+          <td>${catBadges}</td>
+          <td><span class="badge ${c.status}">${esc(c.status)}</span></td>
+          <td>${c.completed_order_count > 0
+            ? `<span class="badge completed">${c.completed_order_count} completed</span>`
+            : '<span class="muted">—</span>'}</td>
+          <td class="muted" style="font-size:12px">${fmtDate(c.created_at)}<br>${fmtTime(c.created_at)} · ${fmtDay(c.created_at)}</td>
+          <td><a class="btn small secondary" href="#/customer/${c.id}">Open</a></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+
+    wrap.querySelectorAll('[data-copy]').forEach(b => {
+      b.onclick = (e) => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(b.dataset.copy)
+          .then(() => toast('Copied ✓', 'success'))
+          .catch(() => toast('Copy failed', 'error'));
+      };
+    });
+
+    const pages = Math.max(1, Math.ceil(total / limit));
+    const cur = Math.floor(offset / limit) + 1;
+    document.getElementById('cPager').innerHTML = `
+      <button class="btn small ghost" id="prevBtn" ${cur <= 1 ? 'disabled' : ''}>‹ Prev</button>
+      <span class="pages">Page ${cur} of ${pages}</span>
+      <button class="btn small ghost" id="nextBtn" ${cur >= pages ? 'disabled' : ''}>Next ›</button>
+      <span class="muted">· ${total} total</span>`;
+    document.getElementById('prevBtn').onclick = () => { offset = Math.max(0, offset - limit); load(); };
+    document.getElementById('nextBtn').onclick = () => { offset += limit; load(); };
+  }
+
+  let timer;
+  document.getElementById('cSearch').addEventListener('input', (e) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => { search = e.target.value.trim(); offset = 0; load(); }, 250);
+  });
+  document.getElementById('cStatus').addEventListener('change', (e) => { status = e.target.value; offset = 0; load(); });
+  document.getElementById('cFrom').addEventListener('change', (e) => { from = e.target.value; offset = 0; load(); });
+  document.getElementById('cTo').addEventListener('change', (e) => { to = e.target.value; offset = 0; load(); });
+
+  await load();
+}
+
+/* ==========================================================================
+   CUSTOMER DETAILS
+   ========================================================================== */
+async function viewCustomerDetails(id, params) {
+  if (!id) { showError('Missing customer ID'); return; }
+  const isNew = params.get('new') === '1';
+
+  showLoading();
+  const [customer, categories] = await Promise.all([api('/customers/' + id), api('/categories')]);
+  const [hardware, orders, messages, activity] = await Promise.all([
+    api('/customers/' + id + '/hardware'),
+    api('/customers/' + id + '/orders'),
+    api('/customers/' + id + '/messages'),
+    api('/customers/' + id + '/activity'),
+  ]);
+
+  const catNames = customer.categories.map(c => c.name);
+
+  setView(`
+    <div class="page-header">
+      <div>
+        <h2>${custCode(customer.id)} — ${esc(customer.name || 'Unnamed Customer')}</h2>
+        <div class="sub">
+          Phone: <b class="mono">${esc(customer.phone)}</b>
+          ${customer.whatsapp ? ` · WhatsApp: <span class="mono">${esc(customer.whatsapp)}</span>` : ''}
+          · Created: ${fmtDateTime(customer.created_at)}
+        </div>
+      </div>
+      <div class="header-actions">
+        <a href="#/customers" class="btn ghost">← Back</a>
+        <button class="btn" id="newOrderBtn">+ New Order</button>
+      </div>
+    </div>
+
+    ${isNew ? `<div class="info-box success">
+      ✓ Customer saved. Assign categories below and add any details you have — everything is optional.
+      <a href="#/" style="margin-left:auto;font-weight:600">Return to Dashboard</a>
+    </div>` : ''}
+
+    <div class="tabs">
+      <button data-tab="overview" class="active">Overview</button>
+      <button data-tab="contact">Contact</button>
+      <button data-tab="categories">Categories</button>
+      <button data-tab="hardware">Hardware (${hardware.length})</button>
+      <button data-tab="orders">Orders (${orders.length})</button>
+      <button data-tab="messages">Messages (${messages.length})</button>
+      <button data-tab="activity">Activity (${activity.length})</button>
+    </div>
+
+    <div class="tab-panel active" data-panel="overview">
+      <div class="panel">
+        <h3>Overview</h3>
+        <div class="info-grid">
+          <div class="info-item"><div class="lbl">Customer Code</div><div class="val">${custCode(customer.id)}</div></div>
+          <div class="info-item"><div class="lbl">Phone</div><div class="val mono">${esc(customer.phone)}</div></div>
+          <div class="info-item"><div class="lbl">WhatsApp</div><div class="val mono">${esc(customer.whatsapp || '—')}</div></div>
+          <div class="info-item"><div class="lbl">Name</div><div class="val">${esc(customer.name || '—')}</div></div>
+          <div class="info-item"><div class="lbl">Email</div><div class="val">${esc(customer.email || '—')}</div></div>
+          <div class="info-item"><div class="lbl">Address</div><div class="val">${esc(customer.address || '—')}</div></div>
+          <div class="info-item"><div class="lbl">City</div><div class="val">${esc(customer.city || '—')}</div></div>
+          <div class="info-item"><div class="lbl">Status</div><div class="val"><span class="badge ${customer.status}">${esc(customer.status)}</span></div></div>
+          <div class="info-item"><div class="lbl">Categories</div><div class="val">${catNames.length ? catNames.map(c => `<span class="badge ${c.toLowerCase()}">${esc(c)}</span>`).join(' ') : '<span class="muted">Uncategorized</span>'}</div></div>
+          <div class="info-item"><div class="lbl">Created</div><div class="val">${fmtDate(customer.created_at)} ${fmtTime(customer.created_at)}<br><span class="muted">${fmtDay(customer.created_at)}</span></div></div>
+          <div class="info-item"><div class="lbl">Last Updated</div><div class="val">${fmtDate(customer.updated_at)} ${fmtTime(customer.updated_at)}</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-panel" data-panel="contact">
+      <div class="panel">
+        <h3>Edit Contact Details</h3>
+        <form id="contactForm">
+          <div class="form-grid">
+            <div class="form-row"><label>Name</label><input name="name" value="${esc(customer.name || '')}" /></div>
+            <div class="form-row"><label>Primary Phone</label><input name="phone" value="${esc(customer.phone)}" /></div>
+            <div class="form-row"><label>WhatsApp</label><input name="whatsapp" value="${esc(customer.whatsapp || '')}" /></div>
+            <div class="form-row"><label>Alternate Phone</label><input name="alternate_phone" value="${esc(customer.alternate_phone || '')}" /></div>
+            <div class="form-row"><label>Email</label><input name="email" type="email" value="${esc(customer.email || '')}" /></div>
+            <div class="form-row"><label>City</label><input name="city" value="${esc(customer.city || '')}" /></div>
+            <div class="form-row"><label>Province</label><input name="province" value="${esc(customer.province || '')}" /></div>
+            <div class="form-row"><label>Country</label><input name="country" value="${esc(customer.country || '')}" /></div>
+            <div class="form-row"><label>Status</label>
+              <select name="status">
+                <option value="active" ${customer.status === 'active' ? 'selected' : ''}>Active</option>
+                <option value="inactive" ${customer.status === 'inactive' ? 'selected' : ''}>Inactive</option>
+                <option value="archived" ${customer.status === 'archived' ? 'selected' : ''}>Archived</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row"><label>Address</label><textarea name="address">${esc(customer.address || '')}</textarea></div>
+          <div class="form-row"><label>Notes</label><textarea name="notes">${esc(customer.notes || '')}</textarea></div>
+          <div class="form-actions">
+            <button class="btn" type="submit">Save Contact Details</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="tab-panel" data-panel="categories">
+      <div class="panel">
+        <h3>Assign Categories</h3>
+        <p class="muted mb-4">A customer can belong to multiple categories. Leave all unchecked for "Uncategorized".</p>
+        <div class="cat-checks" id="catChecks">
+          ${categories.map(c => `
+            <label>
+              <input type="checkbox" value="${esc(c.name)}" ${catNames.includes(c.name) ? 'checked' : ''} />
+              <span>${esc(c.name)}</span>
+            </label>
+          `).join('')}
+        </div>
+        <div class="form-actions">
+          <button class="btn" id="saveCatsBtn">Save Categories</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-panel" data-panel="hardware">
+      <div class="panel">
+        <h3>Hardware Requirements</h3>
+        ${hardware.length
+          ? `<div class="table-wrap"><table>
+              <thead><tr><th>Product</th><th>Brand / Model</th><th>Qty</th><th>Budget</th><th>Specs</th><th>Added</th></tr></thead>
+              <tbody>${hardware.map(h => `<tr>
+                <td>${esc(h.product_name || '—')}</td>
+                <td>${esc([h.brand, h.model].filter(Boolean).join(' / ') || '—')}</td>
+                <td>${h.quantity || '—'}</td>
+                <td>${h.budget_minor != null ? fmtMoney(h.budget_minor, h.currency || 'PKR') : '—'}</td>
+                <td>${esc(h.specifications || '—')}</td>
+                <td class="muted">${fmtDate(h.created_at)}</td>
+              </tr>`).join('')}</tbody>
+            </table></div>`
+          : emptyState({ icon: '⚙', title: 'No requirements recorded', message: 'Add one below when the customer shares hardware needs.' })}
+      </div>
+      <div class="panel">
+        <h3>Add Requirement</h3>
+        <form id="hwForm">
+          <div class="form-grid">
+            <div class="form-row"><label>Product Name</label><input name="product_name" /></div>
+            <div class="form-row"><label>Brand</label><input name="brand" /></div>
+            <div class="form-row"><label>Model</label><input name="model" /></div>
+            <div class="form-row"><label>Quantity</label><input name="quantity" type="number" min="1" /></div>
+            <div class="form-row"><label>Budget (PKR)</label><input name="budget" type="number" step="0.01" min="0" /></div>
+            <div class="form-row"><label>Currency</label><input name="currency" value="PKR" /></div>
+          </div>
+          <div class="form-row"><label>Specifications</label><textarea name="specifications"></textarea></div>
+          <div class="form-row"><label>Notes</label><textarea name="notes"></textarea></div>
+          <div class="form-actions"><button class="btn" type="submit">Add Requirement</button></div>
+        </form>
+      </div>
+    </div>
+
+    <div class="tab-panel" data-panel="orders">
+      <div class="panel">
+        <div class="flex-between mb-2">
+          <h3>Order History</h3>
+          <button class="btn small" id="newOrderBtn2">+ New Order</button>
+        </div>
+        ${orders.length
+          ? `<div class="table-wrap"><table>
+              <thead><tr><th>#</th><th>Tracking</th><th>Status</th><th>Items</th><th>Created</th><th>Finalized</th><th></th></tr></thead>
+              <tbody>${orders.map(o => `<tr>
+                <td>${o.id}</td>
+                <td class="mono">${esc(o.tracking_id || '—')}</td>
+                <td><span class="badge ${o.status}">${o.status}</span></td>
+                <td>${o.item_count}</td>
+                <td class="muted">${fmtDate(o.created_at)} ${fmtTime(o.created_at)}</td>
+                <td>${o.finalized_at ? `${fmtDate(o.finalized_at)}<br><span class="muted">${fmtDay(o.finalized_at)}</span>` : '—'}</td>
+                <td><a class="btn small secondary" href="#/order/${o.id}">Open</a></td>
+              </tr>`).join('')}</tbody>
+            </table></div>`
+          : emptyState({ icon: '🧾', title: 'No orders yet', message: 'Create a draft order to start recording products and pricing.' })}
+      </div>
+    </div>
+
+    <div class="tab-panel" data-panel="messages">
+      <div class="panel">
+        <h3>Messages</h3>
+        ${messages.length
+          ? messages.map(m => `<div style="padding:12px 0;border-bottom:1px solid var(--border)">
+              <div class="muted" style="font-size:12px">${esc(m.source || 'note')} • ${fmtDate(m.created_at)} ${fmtTime(m.created_at)}</div>
+              <div style="margin-top:4px">${esc(m.message_text)}</div>
+              ${m.notes ? `<div class="muted" style="font-size:12px;margin-top:4px">Note: ${esc(m.notes)}</div>` : ''}
+            </div>`).join('')
+          : emptyState({ icon: '💬', title: 'No messages saved', message: 'Paste important WhatsApp details, price agreements, or call notes below.' })}
+      </div>
+      <div class="panel">
+        <h3>Add Message</h3>
+        <form id="msgForm">
+          <div class="form-row"><label>Source</label>
+            <select name="source">
+              <option value="whatsapp">WhatsApp</option>
+              <option value="call">Phone Call</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-row"><label>Message Text <span class="req">*</span></label><textarea name="message_text" required></textarea></div>
+          <div class="form-row"><label>Notes</label><textarea name="notes"></textarea></div>
+          <div class="form-actions"><button class="btn" type="submit">Save Message</button></div>
+        </form>
+      </div>
+    </div>
+
+    <div class="tab-panel" data-panel="activity">
+      <div class="panel">
+        <h3>Activity History</h3>
+        ${activity.length
+          ? `<div class="table-wrap"><table>
+              <thead><tr><th>When</th><th>Action</th><th>Details</th></tr></thead>
+              <tbody>${activity.map(a => `<tr>
+                <td class="muted">${fmtDate(a.created_at)} ${fmtTime(a.created_at)}</td>
+                <td>${esc(a.action_type)}</td>
+                <td class="muted mono" style="font-size:12px">${esc(a.details_json || '—')}</td>
+              </tr>`).join('')}</tbody>
+            </table></div>`
+          : emptyState({ icon: '📜', title: 'No activity yet', message: 'Every save and change you make will appear here.' })}
+      </div>
+    </div>
+  `);
+
+  // Tabs
+  document.querySelectorAll('.tabs button').forEach(b => {
+    b.onclick = () => {
+      document.querySelectorAll('.tabs button').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      b.classList.add('active');
+      const panel = document.querySelector(`.tab-panel[data-panel="${b.dataset.tab}"]`);
+      if (panel) panel.classList.add('active');
+    };
+  });
+
+  // Contact form save
+  document.getElementById('contactForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const body = Object.fromEntries(fd.entries());
+    try {
+      await api('/customers/' + id, { method: 'PATCH', body });
+      toast('Contact details saved ✓', 'success');
+      await viewCustomerDetails(id, new URLSearchParams());
+    } catch (err) { toast(err.message, 'error'); }
+  };
+
+  // Categories
+  document.getElementById('saveCatsBtn').onclick = async () => {
+    const cats = Array.from(document.querySelectorAll('#catChecks input:checked')).map(x => x.value);
+    try {
+      await api('/customers/' + id + '/categories', { method: 'PUT', body: { categories: cats } });
+      toast('Categories updated ✓', 'success');
+      await viewCustomerDetails(id, new URLSearchParams());
+    } catch (err) { toast(err.message, 'error'); }
+  };
+
+  // Hardware
+  document.getElementById('hwForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const body = Object.fromEntries(fd.entries());
+    if (body.budget) body.budget_minor = toMinor(body.budget);
+    delete body.budget;
+    try {
+      await api('/customers/' + id + '/hardware', { method: 'POST', body });
+      toast('Requirement added ✓', 'success');
+      await viewCustomerDetails(id, new URLSearchParams());
+    } catch (err) { toast(err.message, 'error'); }
+  };
+
+  // Messages
+  document.getElementById('msgForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const body = Object.fromEntries(fd.entries());
+    try {
+      await api('/customers/' + id + '/messages', { method: 'POST', body });
+      toast('Message saved ✓', 'success');
+      await viewCustomerDetails(id, new URLSearchParams());
+    } catch (err) { toast(err.message, 'error'); }
+  };
+
+  // New order
+  async function createOrder() {
+    try {
+      const order = await api('/customers/' + id + '/orders', { method: 'POST', body: {} });
+      location.hash = '#/order/' + order.id;
+    } catch (err) { toast(err.message, 'error'); }
+  }
+  document.getElementById('newOrderBtn').onclick = createOrder;
+  document.getElementById('newOrderBtn2').onclick = createOrder;
+}
+
+/* ==========================================================================
+   ORDERS LIST
+   ========================================================================== */
+async function viewOrders(params) {
+  const statusParam = params.get('status') || '';
+  const finalized = params.get('finalized') === '1';
+  const progress = params.get('progress') === '1';
+  let title = 'All Orders';
+  if (statusParam === 'draft') title = 'Draft Orders';
+  else if (statusParam === 'confirmed') title = 'Pending Orders';
+  else if (statusParam === 'cancelled') title = 'Cancelled Orders';
+  else if (finalized) title = 'Completed Orders';
+  else if (progress) title = 'Orders in Progress';
+
+  setView(`
+    <div class="page-header">
+      <div><h2>${esc(title)}</h2><div class="sub" id="countLine">Loading…</div></div>
+    </div>
+    <div class="toolbar">
+      <input id="oSearch" type="search" class="search-input" placeholder="Search tracking ID, order #, phone, name…" aria-label="Search orders">
+      <select id="oStatus" aria-label="Filter by status">
+        <option value="">All statuses</option>
+        <option value="draft" ${statusParam === 'draft' ? 'selected' : ''}>Draft</option>
+        <option value="confirmed" ${statusParam === 'confirmed' ? 'selected' : ''}>Pending</option>
+        <option value="completed" ${finalized ? 'selected' : ''}>Completed</option>
+        <option value="cancelled" ${statusParam === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+      </select>
+      <input id="oFrom" type="date" class="date-input" aria-label="Date from">
+      <input id="oTo" type="date" class="date-input" aria-label="Date to">
+    </div>
+    <div id="oTable" class="table-wrap"><div class="loading">Loading</div></div>
+    <div id="oPager" class="pagination"></div>
+  `);
+
+  let search = '', status = statusParam, from = '', to = '', offset = 0;
+  const limit = 50;
+
+  async function load() {
+    const p = new URLSearchParams();
+    if (finalized) p.set('finalized', '1');
+    if (progress) p.set('progress', '1');
+    if (status && !finalized) p.set('status', status);
+    if (search) p.set('search', search);
+    if (from) p.set('from', from);
+    if (to) p.set('to', to);
+    p.set('limit', limit); p.set('offset', offset);
+
+    const { rows, total } = await api('/orders?' + p.toString());
+    document.getElementById('countLine').textContent = `${total} order(s)`;
+    const wrap = document.getElementById('oTable');
+    if (!rows.length) {
+      wrap.innerHTML = emptyState({
+        icon: '🧾', title: 'No orders match this filter',
+        message: 'Try clearing filters or create an order from a customer page.',
+      });
+      document.getElementById('oPager').innerHTML = '';
+      return;
+    }
+    wrap.innerHTML = `<table>
+      <thead><tr>
+        <th>#</th><th>Tracking</th><th>Customer</th><th>Phone</th>
+        <th>Products</th><th>Final Price</th><th>Status</th>
+        <th>Created</th><th>Finalized</th><th></th>
+      </tr></thead>
+      <tbody>${rows.map(o => `<tr>
+        <td>${o.id}</td>
+        <td class="mono">${esc(o.tracking_id || '—')}
+          ${o.tracking_id ? `<button class="copy-btn" data-copy="${esc(o.tracking_id)}" aria-label="Copy tracking">⧉</button>` : ''}</td>
+        <td>${esc(o.customer_name || '—')}</td>
+        <td class="mono">${esc(o.customer_phone || '—')}</td>
+        <td>${esc(o.product_summary || '—')}</td>
+        <td>${o.final_price_minor != null ? fmtMoney(o.final_price_minor, o.currency) : '<span class="muted">—</span>'}</td>
+        <td><span class="badge ${o.status}">${o.status}</span></td>
+        <td class="muted" style="font-size:12px">${fmtDate(o.created_at)}<br>${fmtTime(o.created_at)}</td>
+        <td style="font-size:12px">${o.finalized_at
+          ? `${fmtDate(o.finalized_at)}<br><span class="muted">${fmtTime(o.finalized_at)} · ${fmtDay(o.finalized_at)}</span>`
+          : '—'}</td>
+        <td><a class="btn small secondary" href="#/order/${o.id}">Open</a></td>
+      </tr>`).join('')}</tbody>
+    </table>`;
+
+    wrap.querySelectorAll('[data-copy]').forEach(b => {
+      b.onclick = (e) => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(b.dataset.copy)
+          .then(() => toast('Copied ✓', 'success'))
+          .catch(() => toast('Copy failed', 'error'));
+      };
+    });
+
+    const pages = Math.max(1, Math.ceil(total / limit));
+    const cur = Math.floor(offset / limit) + 1;
+    document.getElementById('oPager').innerHTML = `
+      <button class="btn small ghost" id="prevBtn" ${cur <= 1 ? 'disabled' : ''}>‹ Prev</button>
+      <span class="pages">Page ${cur} of ${pages}</span>
+      <button class="btn small ghost" id="nextBtn" ${cur >= pages ? 'disabled' : ''}>Next ›</button>
+      <span class="muted">· ${total} total</span>`;
+    document.getElementById('prevBtn').onclick = () => { offset = Math.max(0, offset - limit); load(); };
+    document.getElementById('nextBtn').onclick = () => { offset += limit; load(); };
+  }
+
+  let timer;
+  document.getElementById('oSearch').addEventListener('input', (e) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => { search = e.target.value.trim(); offset = 0; load(); }, 250);
+  });
+  document.getElementById('oStatus').addEventListener('change', (e) => {
+    status = e.target.value; offset = 0; load();
+  });
+  document.getElementById('oFrom').addEventListener('change', (e) => { from = e.target.value; offset = 0; load(); });
+  document.getElementById('oTo').addEventListener('change', (e) => { to = e.target.value; offset = 0; load(); });
+
+  await load();
+}
+
+/* ==========================================================================
+   ORDER DETAILS
+   ========================================================================== */
+async function viewOrderDetails(id) {
+  if (!id) { showError('Missing order ID'); return; }
+  showLoading();
+  const order = await api('/orders/' + id);
+  const editable = order.status === 'draft' || order.status === 'confirmed';
+
+  setView(`
+    <div class="page-header">
+      <div>
+        <h2>Order #${order.id} ${order.tracking_id ? '— <span class="mono">' + esc(order.tracking_id) + '</span>' : ''}</h2>
+        <div class="sub">
+          Status: <span class="badge ${order.status}">${order.status}</span>
+          · Customer: <a href="#/customer/${order.customer_id}">${esc(order.customer_name || 'Unnamed')}</a>
+          · Phone: <span class="mono">${esc(order.customer_phone)}</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <a href="#/orders" class="btn ghost">← Back</a>
+        ${order.tracking_id ? `<button class="btn outline" id="copyTrackBtn">Copy Tracking</button>` : ''}
+        <button class="btn outline" id="printBtn">Print</button>
+        ${editable ? `<button class="btn secondary" id="confirmBtn">Confirm</button>` : ''}
+        ${editable ? `<button class="btn success" id="finalizeBtn">★ Finalize</button>` : ''}
+        ${order.status !== 'completed' && order.status !== 'cancelled'
+          ? `<button class="btn danger-ghost" id="cancelBtn">Cancel</button>` : ''}
+      </div>
+    </div>
+
+    ${order.status === 'completed' ? `
+      <div class="panel" style="border-left:4px solid var(--success)">
+        <h3>★ Finalized Order</h3>
+        <div class="info-grid">
+          <div class="info-item"><div class="lbl">Tracking ID</div><div class="val mono strong">${esc(order.tracking_id)}</div></div>
+          <div class="info-item"><div class="lbl">Finalized On</div>
+            <div class="val">${fmtDate(order.finalized_at)} — ${fmtTime(order.finalized_at)}<br>
+            <span class="muted">${fmtDay(order.finalized_at)}</span></div></div>
+          <div class="info-item"><div class="lbl">Final Price</div>
+            <div class="val strong">${fmtMoney(order.final_price_minor, order.currency)}</div></div>
+        </div>
+      </div>
+    ` : ''}
+
+    <div class="tabs">
+      <button class="active" data-tab="items">Products (${order.items.length})</button>
+      <button data-tab="pricing">Pricing &amp; Notes</button>
+      <button data-tab="snapshot">Customer Snapshot</button>
+    </div>
+
+    <div class="tab-panel active" data-panel="items">
+      <div class="panel">
+        <h3>Order Items</h3>
+        ${order.items.length
+          ? `<div class="table-wrap"><table>
+              <thead><tr>
+                <th>Product</th><th>SKU</th><th>Variant</th><th>Qty</th>
+                <th>Unit</th><th>Discount</th><th>Line Total</th>
+                ${editable ? '<th></th>' : ''}
+              </tr></thead>
+              <tbody>
+                ${order.items.map(it => `<tr>
+                  <td>${esc(it.product_name)}</td>
+                  <td>${esc(it.product_sku || '—')}</td>
+                  <td>${esc(it.size_variant || '—')}</td>
+                  <td>${it.quantity}</td>
+                  <td>${fmtMoney(it.unit_price_minor, order.currency)}</td>
+                  <td>${fmtMoney(it.discount_minor, order.currency)}</td>
+                  <td class="strong">${fmtMoney(it.line_total_minor, order.currency)}</td>
+                  ${editable ? `<td><button class="btn danger-ghost small" data-del="${it.id}" aria-label="Remove item">✕</button></td>` : ''}
+                </tr>`).join('')}
+                <tr style="background:var(--surface-alt);font-weight:600">
+                  <td colspan="6" class="right">Subtotal</td>
+                  <td colspan="${editable ? 2 : 1}">${fmtMoney(order.subtotal_minor, order.currency)}</td>
+                </tr>
+              </tbody>
+            </table></div>`
+          : emptyState({ icon: '📦', title: 'No items yet', message: 'Add products below to build this order.' })}
+        ${editable ? `
+          <hr style="border:none;border-top:1px solid var(--border);margin:20px 0" />
+          <h3>Add Item</h3>
+          <form id="itemForm">
+            <div class="form-grid">
+              <div class="form-row"><label>Product Name <span class="req">*</span></label><input name="product_name" required /></div>
+              <div class="form-row"><label>SKU</label><input name="product_sku" /></div>
+              <div class="form-row"><label>Size / Variant</label><input name="size_variant" /></div>
+              <div class="form-row"><label>Quantity</label><input name="quantity" type="number" min="1" value="1" /></div>
+              <div class="form-row"><label>Unit Price (PKR)</label><input name="unit_price" type="number" step="0.01" min="0" value="0" /></div>
+              <div class="form-row"><label>Line Discount (PKR)</label><input name="discount" type="number" step="0.01" min="0" value="0" /></div>
+            </div>
+            <div class="form-row"><label>Description</label><textarea name="description"></textarea></div>
+            <div class="form-actions"><button class="btn" type="submit">+ Add Item</button></div>
+          </form>
+        ` : ''}
+      </div>
+    </div>
+
+    <div class="tab-panel" data-panel="pricing">
+      <div class="panel">
+        <h3>Pricing &amp; Notes</h3>
+        ${editable ? `
+          <form id="orderForm">
+            <div class="form-grid">
+              <div class="form-row"><label>Discount (PKR)</label><input name="discount" type="number" step="0.01" min="0" value="${(order.discount_minor / 100).toFixed(2)}" /></div>
+              <div class="form-row"><label>Extra Charges (PKR)</label><input name="extra_charges" type="number" step="0.01" min="0" value="${(order.extra_charges_minor / 100).toFixed(2)}" /></div>
+              <div class="form-row"><label>Payment Status</label>
+                <select name="payment_status">
+                  <option value="unpaid" ${order.payment_status === 'unpaid' ? 'selected' : ''}>Unpaid</option>
+                  <option value="partial" ${order.payment_status === 'partial' ? 'selected' : ''}>Partial</option>
+                  <option value="paid" ${order.payment_status === 'paid' ? 'selected' : ''}>Paid</option>
+                </select>
+              </div>
+              <div class="form-row"><label>Delivery Status</label>
+                <select name="delivery_status">
+                  <option value="pending" ${order.delivery_status === 'pending' ? 'selected' : ''}>Pending</option>
+                  <option value="dispatched" ${order.delivery_status === 'dispatched' ? 'selected' : ''}>Dispatched</option>
+                  <option value="delivered" ${order.delivery_status === 'delivered' ? 'selected' : ''}>Delivered</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row"><label>Order Notes</label><textarea name="order_notes">${esc(order.order_notes || '')}</textarea></div>
+            <div class="form-row"><label>Payment Notes</label><textarea name="payment_notes">${esc(order.payment_notes || '')}</textarea></div>
+            <div class="form-actions"><button class="btn" type="submit">Save Changes</button></div>
+          </form>
+        ` : `
+          <div class="info-grid">
+            <div class="info-item"><div class="lbl">Subtotal</div><div class="val">${fmtMoney(order.subtotal_minor, order.currency)}</div></div>
+            <div class="info-item"><div class="lbl">Discount</div><div class="val">${fmtMoney(order.discount_minor, order.currency)}</div></div>
+            <div class="info-item"><div class="lbl">Extra Charges</div><div class="val">${fmtMoney(order.extra_charges_minor, order.currency)}</div></div>
+            <div class="info-item"><div class="lbl">Final Price</div><div class="val strong">${order.final_price_minor != null ? fmtMoney(order.final_price_minor, order.currency) : '—'}</div></div>
+            <div class="info-item"><div class="lbl">Payment Status</div><div class="val">${esc(order.payment_status)}</div></div>
+            <div class="info-item"><div class="lbl">Delivery Status</div><div class="val">${esc(order.delivery_status)}</div></div>
+          </div>
+          <div style="margin-top:14px"><div class="lbl" style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:3px">Order Notes</div><div>${esc(order.order_notes || '—')}</div></div>
+          <div style="margin-top:10px"><div class="lbl" style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:3px">Payment Notes</div><div>${esc(order.payment_notes || '—')}</div></div>
+        `}
+      </div>
+    </div>
+
+    <div class="tab-panel" data-panel="snapshot">
+      <div class="panel">
+        <h3>Customer Snapshot <span class="muted" style="font-weight:400;font-size:12.5px">(captured at finalization)</span></h3>
+        <div class="info-grid">
+          <div class="info-item"><div class="lbl">Name</div><div class="val">${esc(order.customer_name_snapshot || '—')}</div></div>
+          <div class="info-item"><div class="lbl">Phone</div><div class="val mono">${esc(order.customer_phone_snapshot || '—')}</div></div>
+          <div class="info-item"><div class="lbl">WhatsApp</div><div class="val mono">${esc(order.customer_whatsapp_snapshot || '—')}</div></div>
+          <div class="info-item"><div class="lbl">Address</div><div class="val">${esc(order.shipping_address_snapshot || '—')}</div></div>
+        </div>
+      </div>
+    </div>
+  `);
+
+  // Tabs
+  document.querySelectorAll('.tabs button').forEach(b => {
+    b.onclick = () => {
+      document.querySelectorAll('.tabs button').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      b.classList.add('active');
+      const panel = document.querySelector(`.tab-panel[data-panel="${b.dataset.tab}"]`);
+      if (panel) panel.classList.add('active');
+    };
+  });
+
+  // Delete item
+  document.querySelectorAll('[data-del]').forEach(b => {
+    b.onclick = async () => {
+      if (!confirm('Remove this item?')) return;
+      try {
+        await api(`/orders/${order.id}/items/${b.dataset.del}`, { method: 'DELETE' });
+        toast('Item removed', 'success');
+        await viewOrderDetails(id);
+      } catch (err) { toast(err.message, 'error'); }
+    };
+  });
+
+  // Add item
+  const itemForm = document.getElementById('itemForm');
+  if (itemForm) {
+    itemForm.onsubmit = async (e) => {
+      e.preventDefault();
+      const fd = new FormData(itemForm);
+      const body = {
+        product_name: fd.get('product_name'),
+        product_sku: fd.get('product_sku') || null,
+        size_variant: fd.get('size_variant') || null,
+        description: fd.get('description') || null,
+        quantity: parseInt(fd.get('quantity') || 1, 10),
+        unit_price_minor: toMinor(fd.get('unit_price') || 0),
+        discount_minor: toMinor(fd.get('discount') || 0),
+      };
+      try {
+        await api(`/orders/${order.id}/items`, { method: 'POST', body });
+        toast('Item added ✓', 'success');
+        await viewOrderDetails(id);
+      } catch (err) { toast(err.message, 'error'); }
+    };
+  }
+
+  // Save pricing
+  const orderForm = document.getElementById('orderForm');
+  if (orderForm) {
+    orderForm.onsubmit = async (e) => {
+      e.preventDefault();
+      const fd = new FormData(orderForm);
+      const body = {
+        discount_minor: toMinor(fd.get('discount') || 0),
+        extra_charges_minor: toMinor(fd.get('extra_charges') || 0),
+        payment_status: fd.get('payment_status'),
+        delivery_status: fd.get('delivery_status'),
+        order_notes: fd.get('order_notes') || null,
+        payment_notes: fd.get('payment_notes') || null,
+      };
+      try {
+        await api('/orders/' + order.id, { method: 'PATCH', body });
+        toast('Saved ✓', 'success');
+        await viewOrderDetails(id);
+      } catch (err) { toast(err.message, 'error'); }
+    };
+  }
+
+  // Copy tracking
+  const copyBtn = document.getElementById('copyTrackBtn');
+  if (copyBtn) copyBtn.onclick = () => {
+    navigator.clipboard.writeText(order.tracking_id)
+      .then(() => toast('Tracking ID copied ✓', 'success'))
+      .catch(() => toast('Copy failed', 'error'));
+  };
+
+  // Print
+  document.getElementById('printBtn').onclick = () => printOrder(order);
+
+  // Confirm
+  const confirmBtn = document.getElementById('confirmBtn');
+  if (confirmBtn) confirmBtn.onclick = () => {
+    openModal(`
+      <div class="modal">
+        <div class="modal-head">
+          <h3 id="modalTitle">Confirm Order #${order.id}?</h3>
+          <button class="modal-close" data-close aria-label="Close">×</button>
+        </div>
+        <div class="modal-body">
+          <p>Confirming will mark this order as <b>pending</b>. You can still add items and adjust pricing before finalization.</p>
+        </div>
+        <div class="modal-foot">
+          <button class="btn ghost" data-close>Cancel</button>
+          <button class="btn" id="confirmAction">Confirm Order</button>
+        </div>
+      </div>
+    `);
+    document.getElementById('confirmAction').onclick = async () => {
+      try {
+        await api(`/orders/${order.id}/confirm`, { method: 'POST' });
+        closeModal();
+        toast('Order confirmed ✓', 'success');
+        await viewOrderDetails(id);
+      } catch (err) { toast(err.message, 'error'); }
+    };
+  };
+
+  // Cancel
+  const cancelBtn = document.getElementById('cancelBtn');
+  if (cancelBtn) cancelBtn.onclick = () => {
+    openModal(`
+      <div class="modal">
+        <div class="modal-head">
+          <h3 id="modalTitle">Cancel Order #${order.id}?</h3>
+          <button class="modal-close" data-close aria-label="Close">×</button>
+        </div>
+        <div class="modal-body">
+          <p>This will mark the order as <b>cancelled</b>. This action cannot be undone.</p>
+        </div>
+        <div class="modal-foot">
+          <button class="btn ghost" data-close>Keep Order</button>
+          <button class="btn danger" id="cancelAction">Cancel Order</button>
+        </div>
+      </div>
+    `);
+    document.getElementById('cancelAction').onclick = async () => {
+      try {
+        await api(`/orders/${order.id}/cancel`, { method: 'POST' });
+        closeModal();
+        toast('Order cancelled', 'success');
+        await viewOrderDetails(id);
+      } catch (err) { toast(err.message, 'error'); }
+    };
+  };
+
+  // Finalize
+  const finalizeBtn = document.getElementById('finalizeBtn');
+  if (finalizeBtn) finalizeBtn.onclick = () => {
+    if (order.items.length === 0) { toast('Add at least one item before finalizing', 'error'); return; }
+    const subtotal = order.subtotal_minor;
+    const final = subtotal - order.discount_minor + order.extra_charges_minor;
+    openModal(`
+      <div class="modal">
+        <div class="modal-head">
+          <h3 id="modalTitle">Finalize Order #${order.id}?</h3>
+          <button class="modal-close" data-close aria-label="Close">×</button>
+        </div>
+        <div class="modal-body">
+          <p>Finalizing will:</p>
+          <ul>
+            <li>Lock the final price</li>
+            <li>Generate a unique tracking ID</li>
+            <li>Snapshot the customer's current details</li>
+            <li>Record the exact finalization date &amp; time</li>
+          </ul>
+          <div class="summary">
+            <div class="summary-row"><span>Customer</span><b>${esc(order.customer_name || order.customer_phone)}</b></div>
+            <div class="summary-row"><span>Items</span><b>${order.items.length}</b></div>
+            <div class="summary-row"><span>Subtotal</span><b>${fmtMoney(subtotal, order.currency)}</b></div>
+            <div class="summary-row"><span>Discount</span><b>− ${fmtMoney(order.discount_minor, order.currency)}</b></div>
+            <div class="summary-row"><span>Extra Charges</span><b>+ ${fmtMoney(order.extra_charges_minor, order.currency)}</b></div>
+            <div class="summary-row total"><span>Final Price</span><b>${fmtMoney(final, order.currency)}</b></div>
+          </div>
+          <p class="warn-note">⚠ This action cannot be undone.</p>
+        </div>
+        <div class="modal-foot">
+          <button class="btn ghost" data-close>Cancel</button>
+          <button class="btn success" id="confirmFinalizeBtn">Finalize Order</button>
+        </div>
+      </div>
+    `);
+    document.getElementById('confirmFinalizeBtn').onclick = async () => {
+      const btn = document.getElementById('confirmFinalizeBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Finalizing';
+      try {
+        const res = await api(`/orders/${order.id}/finalize`, { method: 'POST' });
+        closeModal();
+        toast('Finalized! Tracking: ' + res.trackingId, 'success');
+        await viewOrderDetails(id);
+      } catch (err) {
+        toast(err.message, 'error');
+        btn.disabled = false;
+        btn.textContent = 'Finalize Order';
+      }
+    };
+  };
+}
+
+/* ==========================================================================
+   PRINT ORDER
+   ========================================================================== */
+function printOrder(order) {
+  const rows = order.items.map(it => `
+    <tr>
+      <td>${esc(it.product_name)}</td>
+      <td>${esc(it.product_sku || '—')}</td>
+      <td>${esc(it.size_variant || '—')}</td>
+      <td style="text-align:right">${it.quantity}</td>
+      <td style="text-align:right">${fmtMoney(it.unit_price_minor, order.currency)}</td>
+      <td style="text-align:right">${fmtMoney(it.discount_minor, order.currency)}</td>
+      <td style="text-align:right">${fmtMoney(it.line_total_minor, order.currency)}</td>
+    </tr>
+  `).join('');
+  const final = order.final_price_minor != null ? order.final_price_minor : (order.subtotal_minor - order.discount_minor + order.extra_charges_minor);
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>Order ${esc(order.tracking_id || '#' + order.id)}</title>
+    <style>
+      body{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#111;padding:40px;max-width:800px;margin:0 auto;font-size:13px}
+      h1{font-size:20px;margin-bottom:4px}
+      .muted{color:#666}
+      table{width:100%;border-collapse:collapse;margin:18px 0}
+      th,td{padding:7px 8px;border-bottom:1px solid #ddd;text-align:left}
+      th{background:#f5f5f5;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+      .totals{margin-left:auto;width:280px;margin-top:8px}
+      .totals td{border:none;padding:4px 8px}
+      .totals .total{font-weight:700;font-size:15px;border-top:1px solid #333;padding-top:8px}
+      .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px}
+      .box{background:#f5f5f5;padding:12px 16px;border-radius:6px;margin-bottom:16px}
+    </style></head><body>
+    <div class="header">
+      <div>
+        <h1>Order ${esc(order.tracking_id || '#' + order.id)}</h1>
+        <div class="muted">Created ${fmtDate(order.created_at)} ${fmtTime(order.created_at)}</div>
+        ${order.finalized_at ? `<div class="muted">Finalized ${fmtDate(order.finalized_at)} ${fmtTime(order.finalized_at)} (${fmtDay(order.finalized_at)})</div>` : ''}
+      </div>
+      <div style="text-align:right">
+        <div class="muted">Status</div>
+        <div style="font-weight:600;text-transform:capitalize">${esc(order.status)}</div>
+      </div>
+    </div>
+    <div class="box">
+      <div style="font-size:11px;text-transform:uppercase;color:#666;margin-bottom:4px;font-weight:700">Customer</div>
+      <div style="font-weight:600">${esc(order.customer_name_snapshot || order.customer_name || '—')}</div>
+      <div>${esc(order.customer_phone_snapshot || order.customer_phone || '—')}</div>
+      ${(order.customer_whatsapp_snapshot || order.customer_whatsapp) ? `<div>WhatsApp: ${esc(order.customer_whatsapp_snapshot || order.customer_whatsapp)}</div>` : ''}
+      ${(order.shipping_address_snapshot || '') ? `<div style="margin-top:4px">${esc(order.shipping_address_snapshot)}</div>` : ''}
+    </div>
+    <table>
+      <thead><tr><th>Product</th><th>SKU</th><th>Variant</th><th style="text-align:right">Qty</th><th style="text-align:right">Unit</th><th style="text-align:right">Discount</th><th style="text-align:right">Total</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <table class="totals">
+      <tr><td>Subtotal</td><td style="text-align:right">${fmtMoney(order.subtotal_minor, order.currency)}</td></tr>
+      <tr><td>Discount</td><td style="text-align:right">− ${fmtMoney(order.discount_minor, order.currency)}</td></tr>
+      <tr><td>Extra Charges</td><td style="text-align:right">+ ${fmtMoney(order.extra_charges_minor, order.currency)}</td></tr>
+      <tr class="total"><td>Final Price</td><td style="text-align:right">${fmtMoney(final, order.currency)}</td></tr>
+    </table>
+    ${order.order_notes ? `<div style="margin-top:24px"><div style="font-size:11px;text-transform:uppercase;color:#666;font-weight:700;margin-bottom:4px">Notes</div><div>${esc(order.order_notes)}</div></div>` : ''}
+    <script>window.onload=()=>window.print();</script>
+    </body></html>`;
+  const w = window.open('', '_blank');
+  if (!w) { toast('Please allow pop-ups to print', 'error'); return; }
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+}
+
+/* ==========================================================================
+   HARDWARE REQUIREMENTS PAGE
+   ========================================================================== */
+async function viewHardware() {
+  showLoading();
+  const rows = await api('/hardware');
+  setView(`
+    <div class="page-header">
+      <div><h2>Hardware Requirements</h2><div class="sub">${rows.length} requirement(s) recorded</div></div>
+    </div>
+    ${rows.length
+      ? `<div class="table-wrap"><table>
+          <thead><tr><th>Customer</th><th>Phone</th><th>WhatsApp</th><th>Product</th><th>Brand / Model</th><th>Qty</th><th>Budget</th><th>Recorded</th><th></th></tr></thead>
+          <tbody>${rows.map(h => `<tr>
+            <td>${esc(h.customer_name || custCode(h.customer_id))}</td>
+            <td class="mono">${esc(h.phone)}</td>
+            <td class="mono">${esc(h.whatsapp || '—')}</td>
+            <td>${esc(h.product_name || '—')}</td>
+            <td>${esc([h.brand, h.model].filter(Boolean).join(' / ') || '—')}</td>
+            <td>${h.quantity || '—'}</td>
+            <td>${h.budget_minor != null ? fmtMoney(h.budget_minor, h.currency || 'PKR') : '—'}</td>
+            <td class="muted">${fmtDate(h.created_at)} ${fmtTime(h.created_at)}</td>
+            <td><a class="btn small secondary" href="#/customer/${h.customer_id}">Open</a></td>
+          </tr>`).join('')}</tbody>
+        </table></div>`
+      : emptyState({
+          icon: '⚙', title: 'No hardware requirements yet',
+          message: 'Open a customer and add a hardware requirement from their detail page.',
+          action: '<a class="btn" href="#/customers">Browse Customers</a>',
+        })}
+  `);
+}
+
+/* ==========================================================================
+   BACKUP & RESTORE
+   ========================================================================== */
+async function viewBackup() {
+  showLoading();
+  const backups = await api('/backups');
+  setView(`
+    <div class="page-header"><div><h2>Backup &amp; Restore</h2><div class="sub">Protect your data locally</div></div></div>
+    <div class="panel">
+      <h3>Create Backup</h3>
+      <p class="muted mb-2">Backups are stored in <code>backups/</code> and use SQLite's safe online backup mechanism.</p>
+      <button class="btn" id="backupBtn">Create Backup Now</button>
+      <div id="backupMsg" class="muted mt-2"></div>
+    </div>
+    <div class="panel">
+      <h3>Existing Backups</h3>
+      ${backups.length
+        ? `<div class="table-wrap"><table>
+            <thead><tr><th>Filename</th><th>Size</th><th>Modified</th><th></th></tr></thead>
+            <tbody>${backups.map(b => `<tr>
+              <td class="mono">${esc(b.filename)}</td>
+              <td>${(b.size / 1024).toFixed(1)} KB</td>
+              <td class="muted">${fmtDate(b.modified)} ${fmtTime(b.modified)}</td>
+              <td><button class="btn danger small" data-restore="${esc(b.filename)}">Restore</button></td>
+            </tr>`).join('')}</tbody>
+          </table></div>`
+        : emptyState({ icon: '💾', title: 'No backups yet', message: 'Create your first backup above to protect your data.' })}
+    </div>
+    <div class="info-box">ℹ Backups include all customers, orders, items, messages, and settings. Restoring a backup replaces the current database with a safety backup of the current one automatically created first.</div>
+  `);
+
+  document.getElementById('backupBtn').onclick = async () => {
+    const btn = document.getElementById('backupBtn');
+    const msg = document.getElementById('backupMsg');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Creating';
+    try {
+      const res = await api('/backup', { method: 'POST' });
+      toast('Backup created ✓', 'success');
+      msg.textContent = 'Saved as ' + res.filename;
+      await viewBackup();
+    } catch (err) {
+      msg.textContent = err.message;
+      toast(err.message, 'error');
+      btn.disabled = false;
+      btn.textContent = 'Create Backup Now';
+    }
+  };
+
+  document.querySelectorAll('[data-restore]').forEach(b => {
+    b.onclick = () => {
+      const filename = b.dataset.restore;
+      openModal(`
+        <div class="modal">
+          <div class="modal-head">
+            <h3 id="modalTitle">Restore Backup?</h3>
+            <button class="modal-close" data-close aria-label="Close">×</button>
+          </div>
+          <div class="modal-body">
+            <p>This will replace all current data with:</p>
+            <div class="summary"><span class="mono">${esc(filename)}</span></div>
+            <p>A safety backup of your current database will be created first.</p>
+            <p class="warn-note">⚠ The page will reload after restore.</p>
+          </div>
+          <div class="modal-foot">
+            <button class="btn ghost" data-close>Cancel</button>
+            <button class="btn danger" id="confirmRestoreBtn">Restore</button>
+          </div>
+        </div>
+      `);
+      document.getElementById('confirmRestoreBtn').onclick = async () => {
+        const btn = document.getElementById('confirmRestoreBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Restoring';
+        try {
+          await api('/restore', { method: 'POST', body: { filename } });
+          closeModal();
+          toast('Restore complete. Reloading…', 'success');
+          setTimeout(() => location.reload(), 1200);
+        } catch (err) {
+          toast(err.message, 'error');
+          btn.disabled = false;
+          btn.textContent = 'Restore';
+        }
+      };
+    };
+  });
+}
+
+/* ==========================================================================
+   SETTINGS
+   ========================================================================== */
+async function viewSettings() {
+  showLoading();
+  let health = { ok: false };
+  try { health = await api('/health'); } catch (_) {}
+  setView(`
+    <div class="page-header"><div><h2>Settings</h2><div class="sub">System information</div></div></div>
+    <div class="panel">
+      <h3>Application</h3>
+      <div class="info-grid">
+        <div class="info-item"><div class="lbl">Version</div><div class="val">1.0.0</div></div>
+        <div class="info-item"><div class="lbl">Timezone</div><div class="val">${TZ}</div></div>
+        <div class="info-item"><div class="lbl">Currency</div><div class="val">PKR</div></div>
+        <div class="info-item"><div class="lbl">Tracking Prefix</div><div class="val mono">NT</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Database</h3>
+      <div class="info-grid">
+        <div class="info-item"><div class="lbl">Status</div>
+          <div class="val">${health.ok ? '<span class="badge active">connected</span>' : '<span class="badge cancelled">error</span>'}</div>
+        </div>
+        <div class="info-item"><div class="lbl">File</div><div class="val mono" style="font-size:12.5px">${esc(health.db || 'data/customer-management.sqlite')}</div></div>
+        <div class="info-item"><div class="lbl">Server Time</div><div class="val">${health.time ? fmtDateTime(health.time) : '—'}</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Data Safety</h3>
+      <p class="muted mb-2">Regularly create backups from the <a href="#/backup">Backup &amp; Restore</a> page. Backups are stored in the <code>backups/</code> folder next to the app.</p>
+    </div>
+  `);
+}
+
+/* ==========================================================================
+   UNSAVED CHANGES PROTECTION
+   ========================================================================== */
+function markDirty() { state.isDirty = true; }
+function clearDirty() { state.isDirty = false; }
+
+document.addEventListener('input', (e) => {
+  if (e.target.closest('form') && e.target.matches('input, textarea, select')) {
+    markDirty();
+  }
+});
+
+window.addEventListener('beforeunload', (e) => {
+  if (state.isDirty) { e.preventDefault(); e.returnValue = ''; }
+});
+
+/* ==========================================================================
+   HASH ROUTER (with dirty check)
+   ========================================================================== */
+window.addEventListener('hashchange', () => {
+  if (state.revertingHash) { state.revertingHash = false; return; }
+  if (state.isDirty) {
+    if (!confirm('You have unsaved changes. Discard them?')) {
+      state.revertingHash = true;
+      location.hash = state.lastHash;
+      return;
+    }
+    clearDirty();
+  }
+  state.lastHash = location.hash;
+  route().catch(err => { console.error(err); showError(err.message); });
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+  initMobileMenu();
+  if (!location.hash) location.hash = '#/';
+  state.lastHash = location.hash;
+  route().catch(err => { console.error(err); showError(err.message); });
+});
+</script>
+</body>
+</html>
