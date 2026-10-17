@@ -1,11 +1,12 @@
 {
   "name": "customer-order-tracking",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": true,
   "type": "module",
   "description": "Local customer management, order register and payment tracking (Express + SQLite)",
   "scripts": {
     "start": "node server.js",
+    "diagnose": "node diagnose.js",
     "start:sample": "node -e \"process.env.SEED_SAMPLE_DATA='1'; import('./server.js')\""
   },
   "engines": { "node": ">=18" },
