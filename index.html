@@ -27,7 +27,7 @@
     })();
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Customer Management &amp; Order Tracking System</title>
+  <title>Anas Management System</title>
   <meta name="description" content="Professional customer management, categorization, hardware requirements tracking, order register, payment tracking, and purchase cost/profit management.">
   <meta property="og:title" content="Customer Management &amp; Order Tracking System">
   <meta property="og:description" content="Professional customer management, categorization, hardware requirements tracking, order register, payment tracking, and purchase cost/profit management.">
@@ -1099,8 +1099,8 @@
     <!-- SIDEBAR NAVIGATION -->
     <aside class="sidebar">
       <div class="sidebar-brand">
-        <div class="sidebar-brand-icon">NT</div>
-        <div class="sidebar-brand-text">CRM &amp; Orders</div>
+        <div class="sidebar-brand-icon">AM</div>
+        <div class="sidebar-brand-text" id="brandName">Anas Management System</div>
       </div>
       <nav class="sidebar-nav">
         <a href="#/" class="nav-item active" data-nav="dashboard">
@@ -1141,6 +1141,10 @@
         <a href="#/orders" class="nav-item" data-nav="orders">
           <span class="nav-item-left"><span class="nav-icon">▤</span> All Orders</span>
         </a>
+        <a href="#/orders?status=pending" class="nav-item" data-nav="pending">
+          <span class="nav-item-left"><span class="nav-icon">◔</span> Pending Orders</span>
+          <span class="nav-badge" id="badge-pending">0</span>
+        </a>
         <a href="#/orders?progress=1" class="nav-item" data-nav="inprogress">
           <span class="nav-item-left"><span class="nav-icon">◷</span> In Progress</span>
           <span class="nav-badge" id="badge-inprogress">0</span>
@@ -1150,9 +1154,20 @@
           <span class="nav-badge" id="badge-completed">0</span>
         </a>
 
+        <div class="sidebar-section-title">Manage</div>
+        <a href="#/add-customer" class="nav-item" data-nav="add-customer"><span class="nav-item-left"><span class="nav-icon">＋</span> Add Customer</span></a>
+        <a href="#/categories" class="nav-item" data-nav="categories"><span class="nav-item-left"><span class="nav-icon">▣</span> Customer Categories</span></a>
+        <a href="#/payments" class="nav-item" data-nav="payments"><span class="nav-item-left"><span class="nav-icon">₨</span> Payments</span></a>
+        <a href="#/expenses" class="nav-item" data-nav="expenses"><span class="nav-item-left"><span class="nav-icon">⊖</span> Expenses</span></a>
+        <a href="#/reports" class="nav-item" data-nav="reports"><span class="nav-item-left"><span class="nav-icon">▥</span> Reports &amp; Analytics</span></a>
+        <a href="#/activity" class="nav-item" data-nav="activity"><span class="nav-item-left"><span class="nav-icon">⟲</span> Activity History</span></a>
+
         <div class="sidebar-section-title">System</div>
         <a href="#/settings" class="nav-item" data-nav="settings">
-          <span class="nav-item-left"><span class="nav-icon">⚙</span> Backup &amp; Settings</span>
+          <span class="nav-item-left"><span class="nav-icon">⛁</span> Backup &amp; Restore</span>
+        </a>
+        <a href="#/business-settings" class="nav-item" data-nav="business-settings">
+          <span class="nav-item-left"><span class="nav-icon">⚙</span> Settings</span>
         </a>
       </nav>
       <div class="sidebar-footer">
@@ -1344,6 +1359,7 @@
         setBadge('badge-previous', c.previous_customers);
         setBadge('badge-hardware', c.hardware_requirements);
         setBadge('badge-inprogress', c.orders_in_progress);
+        setBadge('badge-pending', c.pending_orders);
         setBadge('badge-completed', c.completed_orders);
       } catch (_) {}
     }
@@ -1653,6 +1669,7 @@
           <input type="search" id="regSearchInput" placeholder="Search customer, phone, tracking ID, product name…" />
           <select id="regStatusFilter">
             <option value="">All Order Statuses</option>
+            <option value="progress">In Progress (all open)</option>
             <option value="draft">Draft</option>
             <option value="pending">Pending</option>
             <option value="confirmed">Confirmed</option>
@@ -1701,6 +1718,14 @@
 
       let search = '';
       let status = '';
+      {
+        const hq = new URLSearchParams(location.hash.split('?')[1] || '');
+        if (hq.get('finalized') === '1') status = 'completed';
+        else if (hq.get('progress') === '1') status = 'progress';
+        else if (hq.get('status')) status = hq.get('status');
+        const sel = document.getElementById('regStatusFilter');
+        if (sel) sel.value = status;
+      }
       let paymentStatus = '';
       let sort = 'newest';
       let hasBalance = '';
@@ -3713,6 +3738,7 @@
       } else if (segments[0] === 'orders') {
         if (queryParams.get('finalized') === '1') navKey = 'completed';
         else if (queryParams.get('progress') === '1') navKey = 'inprogress';
+        else if (queryParams.get('status') === 'pending') navKey = 'pending';
         else navKey = 'orders';
       } else if (segments[0] === 'order') {
         navKey = 'register';
@@ -3720,6 +3746,8 @@
         navKey = 'hardware';
       } else if (segments[0] === 'settings') {
         navKey = 'settings';
+      } else if (['payments','expenses','activity','reports','categories','add-customer','business-settings'].includes(segments[0])) {
+        navKey = segments[0];
       }
 
       setActiveNav(navKey);
@@ -3752,10 +3780,160 @@
           return await renderHardwareList();
         case 'settings':
           return await renderSettings();
+        case 'payments': return await renderPaymentsPage();
+        case 'expenses': return await renderExpensesPage();
+        case 'activity': return await renderActivityPage();
+        case 'reports': return await renderReportsPage();
+        case 'categories': return await renderCategoriesPage();
+        case 'add-customer': return renderAddCustomerPage();
+        case 'business-settings': return await renderBusinessSettings();
         default:
           return await renderDashboard();
       }
     }
+
+
+    /* ===== v1.3 pages: payments, expenses, activity, reports, categories, add customer, settings ===== */
+    const shell = (title, desc, actions, body) => {
+      document.getElementById('app-root').innerHTML = `
+        <div class="top-bar"><div class="top-bar-left"><h2>${esc(title)}</h2><div class="subtitle">${esc(desc)}</div></div>
+        <div class="top-actions">${actions || ''}</div></div>${body}`;
+    };
+    const filterBar = (extra) => `<div class="toolbar">
+      <input type="search" id="fSearch" placeholder="Search…" aria-label="Search">
+      ${extra || ''}
+      <label style="font-size:12px">From <input type="date" id="fFrom"></label>
+      <label style="font-size:12px">To <input type="date" id="fTo"></label>
+      <button class="btn btn-ghost" id="fClear">Clear filters</button></div>`;
+    const tbl = (cols, rowsHtml, empty) => rowsHtml
+      ? `<div class="table-container"><table><thead><tr>${cols.map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${rowsHtml}</tbody></table></div>`
+      : `<div class="empty-state"><div class="empty-state-title">${esc(empty)}</div></div>`;
+
+    // Generic searchable, date-filtered, paginated list backed by the server
+    async function listPage({ title, desc, path, cols, row, empty, extraFilter, extraKey }) {
+      shell(title, desc, '', `${filterBar(extraFilter)}<div class="panel"><div id="listBox" style="padding:8px">Loading…</div><div id="listPager" style="padding:8px"></div></div>`);
+      const st = { search: '', from: '', to: '', extra: '', offset: 0 }; const limit = 50; let timer;
+      async function load() {
+        const p = new URLSearchParams({ limit, offset: st.offset });
+        if (st.search) p.set('search', st.search);
+        if (st.from) p.set('from', st.from);
+        if (st.to) p.set('to', st.to);
+        if (st.extra && extraKey) p.set(extraKey, st.extra);
+        const box = document.getElementById('listBox');
+        try {
+          const r = await apiRequest(`${path}?${p}`);
+          box.innerHTML = tbl(cols, r.rows.map(row).join(''), empty);
+          const end = Math.min(st.offset + limit, r.total);
+          document.getElementById('listPager').innerHTML = `${r.total} matching record(s)${r.total ? ` · showing ${st.offset + 1}–${end}` : ''}
+            <button class="btn btn-sm btn-ghost" id="pgPrev" ${st.offset <= 0 ? 'disabled' : ''}>← Previous</button>
+            <button class="btn btn-sm btn-ghost" id="pgNext" ${end >= r.total ? 'disabled' : ''}>Next →</button>`;
+          document.getElementById('pgPrev').onclick = () => { st.offset = Math.max(0, st.offset - limit); load(); };
+          document.getElementById('pgNext').onclick = () => { st.offset += limit; load(); };
+        } catch (err) { box.innerHTML = `<div class="empty-state"><div class="empty-state-title">Could not load: ${esc(err.message)}</div></div>`; }
+      }
+      document.getElementById('fSearch').oninput = (e) => { clearTimeout(timer); timer = setTimeout(() => { st.search = e.target.value.trim(); st.offset = 0; load(); }, 300); };
+      document.getElementById('fFrom').onchange = (e) => { st.from = e.target.value; st.offset = 0; load(); };
+      document.getElementById('fTo').onchange = (e) => { st.to = e.target.value; st.offset = 0; load(); };
+      const ex = document.getElementById('fExtra'); if (ex) ex.onchange = (e) => { st.extra = e.target.value; st.offset = 0; load(); };
+      document.getElementById('fClear').onclick = () => { ['fSearch', 'fFrom', 'fTo', 'fExtra'].forEach(i => { const el = document.getElementById(i); if (el) el.value = ''; }); Object.assign(st, { search: '', from: '', to: '', extra: '', offset: 0 }); load(); };
+      load();
+    }
+
+    const orderLink = (r) => r.tracking_id ? `<a href="#/order/${r.order_id}" class="tabular-nums" style="font-weight:700">${esc(r.tracking_id)}</a>` : `<a href="#/order/${r.order_id}">Order #${r.order_id}</a>`;
+    const who = (r) => `${esc(r.customer_name || 'Name not added')}<div class="tabular-nums" style="font-size:12px;color:var(--muted)">${esc(r.customer_phone || '')}</div>`;
+
+    function renderPaymentsPage() {
+      return listPage({
+        title: 'Payments', desc: 'Every payment transaction. Only confirmed payments count toward Amount Received.', path: '/payments',
+        cols: ['Date', 'Tracking ID', 'Customer', 'Method', 'Amount', 'Status', 'Reference'], empty: 'No payments match these filters.',
+        extraKey: 'method', extraFilter: `<select id="fExtra" aria-label="Payment method"><option value="">All methods</option><option value="cash">Cash</option><option value="bank_transfer">Bank Transfer</option><option value="easypaisa">Easypaisa</option><option value="jazzcash">JazzCash</option><option value="other">Other</option></select>`,
+        row: (r) => `<tr><td class="tabular-nums">${esc(fmtDate(r.payment_date))}</td><td>${orderLink(r)}</td><td>${who(r)}</td><td>${esc(String(r.payment_method).replace('_', ' '))}</td><td class="tabular-nums" style="text-align:right">${fmtMoney(r.amount_minor, r.currency)}</td><td>${esc(r.payment_status)}</td><td>${esc(r.payment_reference || '—')}</td></tr>`
+      });
+    }
+    function renderExpensesPage() {
+      return listPage({
+        title: 'Expenses', desc: 'Direct expenses recorded against orders (add them from an order’s detail page).', path: '/expenses',
+        cols: ['Date', 'Tracking ID', 'Customer', 'Type', 'Description', 'Amount'], empty: 'No expenses recorded yet.',
+        row: (r) => `<tr><td class="tabular-nums">${esc(fmtDate(r.expense_date))}</td><td>${orderLink(r)}</td><td>${who(r)}</td><td>${esc(r.expense_type)}</td><td>${esc(r.description || '—')}</td><td class="tabular-nums" style="text-align:right">${fmtMoney(r.amount_minor, r.currency)}</td></tr>`
+      });
+    }
+    function renderActivityPage() {
+      return listPage({
+        title: 'Activity History', desc: 'Audit trail of important actions, newest first.', path: '/activity',
+        cols: ['When', 'Action', 'Customer', 'Order', 'Details'], empty: 'No activity recorded yet.',
+        row: (r) => `<tr><td class="tabular-nums">${esc(fmtDate(r.created_at))}</td><td>${esc(String(r.action_type).replace(/_/g, ' '))}</td><td>${r.customer_id ? `<a href="#/customer/${r.customer_id}">${esc(r.customer_name || r.customer_phone || 'Customer')}</a>` : '—'}</td><td>${r.order_id ? `<a href="#/order/${r.order_id}">${esc(r.tracking_id || '#' + r.order_id)}</a>` : '—'}</td><td style="max-width:380px;font-size:12px;word-break:break-word">${esc((r.details_json || '').slice(0, 300))}</td></tr>`
+      });
+    }
+
+    async function renderReportsPage() {
+      const list = (await apiRequest('/reports')).reports;
+      shell('Reports & Analytics', 'Calculated from your saved records. Cancelled and returned orders are excluded from sales and profit reports.', '',
+        `<div class="toolbar"><select id="rType" aria-label="Report">${list.map(r => `<option value="${r.id}">${esc(r.title)}</option>`).join('')}</select>
+          <label style="font-size:12px">From <input type="date" id="rFrom"></label><label style="font-size:12px">To <input type="date" id="rTo"></label>
+          <button class="btn btn-primary" id="rRun">Show report</button><button class="btn btn-secondary" id="rCsv">Download CSV</button></div>
+         <div class="panel"><div id="rOut" style="padding:8px">Choose a report and press “Show report”.</div></div>`);
+      const q = (extra) => { const p = new URLSearchParams(); const f = document.getElementById('rFrom').value, t = document.getElementById('rTo').value; if (f) p.set('from', f); if (t) p.set('to', t); if (extra) p.set('format', extra); return p; };
+      document.getElementById('rRun').onclick = async () => {
+        const out = document.getElementById('rOut'); out.textContent = 'Loading…';
+        try {
+          const rep = await apiRequest(`/reports/${document.getElementById('rType').value}?${q()}`);
+          out.innerHTML = `<div style="margin-bottom:8px"><strong>${esc(rep.title)}</strong> · ${rep.from || 'beginning'} → ${rep.to || 'today'} · ${rep.rows.length} row(s)<div style="font-size:12px;color:var(--muted)">${esc(rep.note)}</div></div>` +
+            tbl(rep.columns, rep.rows.map(r => `<tr>${r.map(c => `<td>${esc(c === null ? '' : c)}</td>`).join('')}</tr>`).join(''), 'No records in this period.');
+        } catch (err) { out.innerHTML = `<div class="empty-state"><div class="empty-state-title">${esc(err.message)}</div></div>`; }
+      };
+      document.getElementById('rCsv').onclick = () => { location.href = `/api/reports/${document.getElementById('rType').value}?${q('csv')}`; };
+    }
+
+    async function renderCategoriesPage() {
+      const draw = async () => {
+        const r = await apiRequest('/categories/summary');
+        shell('Customer Categories', 'A customer can belong to several categories. Previous Customer, Hardware Requirements and Uncategorized are worked out automatically.', '',
+          `<div class="panel"><div style="padding:12px"><form id="catAdd" style="display:flex;gap:8px;flex-wrap:wrap"><label for="catName" style="align-self:center">New category</label><input id="catName" maxlength="40" required placeholder="e.g. Corporate"><button class="btn btn-primary" type="submit">Add</button></form></div>
+          ${tbl(['Category', 'Customers', 'Actions'], r.categories.map(c => `<tr><td><a href="#/customers?category=${encodeURIComponent(c.name)}">${esc(c.name)}</a></td><td>${c.customers}</td><td><button class="btn btn-sm btn-secondary" data-ren="${c.id}" data-name="${esc(c.name)}">Rename</button> <button class="btn btn-sm btn-danger" data-del="${c.id}">Delete</button></td></tr>`).join(''), 'No categories')}
+          <div style="padding:12px;font-size:13px;color:var(--muted)">Automatic groups: Previous Customers ${r.derived.previous_customers} · With Hardware Requirements ${r.derived.hardware_requirements} · Uncategorized ${r.derived.uncategorized}. Counts overlap because one customer can be in many categories.</div></div>`);
+        document.getElementById('catAdd').onsubmit = async (e) => { e.preventDefault(); try { await apiRequest('/categories', { method: 'POST', body: { name: document.getElementById('catName').value } }); showToast('Category added', 'success'); draw(); } catch (err) { showToast(err.message, 'error'); } };
+        document.querySelectorAll('[data-ren]').forEach(b => b.onclick = async () => { const n = prompt('New name for this category:', b.dataset.name); if (!n) return; try { await apiRequest(`/categories/${b.dataset.ren}`, { method: 'PATCH', body: { name: n } }); showToast('Category renamed', 'success'); draw(); } catch (err) { showToast(err.message, 'error'); } });
+        document.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => { if (!confirm('Delete this category? Only empty categories can be deleted.')) return; try { await apiRequest(`/categories/${b.dataset.del}`, { method: 'DELETE' }); showToast('Category deleted', 'success'); draw(); } catch (err) { showToast(err.message, 'error'); } });
+      };
+      await draw();
+    }
+
+    function renderAddCustomerPage() {
+      shell('Add Customer', 'Only the phone number is required. Everything else can be added later.', '',
+        `<div class="panel" style="max-width:560px"><form id="acForm" style="padding:14px;display:grid;gap:10px">
+          <label>Phone number <span style="color:var(--danger)">*</span><input id="acPhone" required inputmode="tel" placeholder="0300 1234567" style="width:100%"></label>
+          <label>Name (optional)<input id="acName" style="width:100%"></label>
+          <label>WhatsApp (optional)<input id="acWa" inputmode="tel" style="width:100%"></label>
+          <label>Address (optional)<input id="acAddr" style="width:100%"></label>
+          <div><button class="btn btn-primary" id="acSave" type="submit">Save customer</button></div><div id="acMsg" role="status"></div></form></div>`);
+      document.getElementById('acForm').onsubmit = async (e) => {
+        e.preventDefault(); const btn = document.getElementById('acSave'); btn.disabled = true;
+        const body = { phone: document.getElementById('acPhone').value.trim() };
+        for (const [k, id] of [['name', 'acName'], ['whatsapp', 'acWa'], ['address', 'acAddr']]) { const v = document.getElementById(id).value.trim(); if (v) body[k] = v; }
+        try {
+          const res = await apiRequest('/customers', { method: 'POST', body });
+          if (res.duplicate || res.existing || res.created === false) document.getElementById('acMsg').innerHTML = `This phone number is already registered. <a href="#/customer/${res.customer.id}">Open existing record</a>`;
+          else { showToast('Customer saved', 'success'); location.hash = `#/customer/${res.customer.id}?new=1`; }
+        } catch (err) { showToast(err.message, 'error'); } finally { btn.disabled = false; }
+      };
+    }
+
+    async function renderBusinessSettings() {
+      const s = await apiRequest('/settings');
+      shell('Settings', 'Business details used across the application. Time zone is fixed to Asia/Karachi.', '',
+        `<div class="panel" style="max-width:560px"><form id="bsForm" style="padding:14px;display:grid;gap:10px">
+          <label>Business name<input id="bsName" maxlength="80" required value="${esc(s.business_name || 'Anas Management System')}" style="width:100%"></label>
+          <label>Tracking ID prefix (1–6 letters/digits, applies to new orders)<input id="bsPrefix" maxlength="6" required value="${esc(s.tracking_prefix || 'NT')}" style="width:100%"></label>
+          <label>Currency code<input id="bsCur" maxlength="3" required value="${esc(s.default_currency || 'PKR')}" style="width:100%"></label>
+          <div><button class="btn btn-primary" type="submit">Save settings</button></div></form></div>`);
+      document.getElementById('bsForm').onsubmit = async (e) => {
+        e.preventDefault();
+        try { await apiRequest('/settings', { method: 'PUT', body: { business_name: bsName.value, tracking_prefix: bsPrefix.value, default_currency: bsCur.value } }); showToast('Settings saved', 'success'); loadBrand(); }
+        catch (err) { showToast(err.message, 'error'); }
+      };
+    }
+    async function loadBrand() { try { const s = await apiRequest('/settings'); if (s.business_name) { document.getElementById('brandName').textContent = s.business_name; document.title = s.business_name; } } catch (_) {} }
+    loadBrand();
 
     window.addEventListener('hashchange', handleRouter);
     window.addEventListener('DOMContentLoaded', () => {
