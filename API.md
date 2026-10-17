@@ -1,5 +1,6 @@
-# API routes (generated from server.js + followups.js)
+# API routes (generated from server.js, followups.js, compat.js)
 Same-origin JSON. Errors: `{"error":"message"}` with 400/404/409/500 (503 for health when the database is down).
+`PUT /api/{customers|orders|categories|followups}/:id` is accepted and handled exactly like the `PATCH` route listed below.
 
 |Method|Route|
 |---|---|
@@ -24,6 +25,7 @@ Same-origin JSON. Errors: `{"error":"message"}` with 400/404/409/500 (503 for he
 |POST|`/api/customers/:id/orders`|
 |GET|`/api/customers/:id/purchases`|
 |GET|`/api/dashboard/followups`|
+|GET|`/api/dashboard/recent-activity`|
 |GET|`/api/dashboard/stats`|
 |GET|`/api/expenses`|
 |GET|`/api/followups`|
@@ -34,6 +36,7 @@ Same-origin JSON. Errors: `{"error":"message"}` with 400/404/409/500 (503 for he
 |POST|`/api/followups/:id/reschedule`|
 |GET|`/api/hardware`|
 |GET|`/api/health`|
+|GET|`/api/messages`|
 |GET|`/api/orders`|
 |GET|`/api/orders/:id`|
 |PATCH|`/api/orders/:id`|
@@ -45,11 +48,16 @@ Same-origin JSON. Errors: `{"error":"message"}` with 400/404/409/500 (503 for he
 |POST|`/api/orders/:id/payments`|
 |POST|`/api/orders/:id/refunds`|
 |POST|`/api/orders/:id/status`|
+|GET|`/api/orders/completed`|
 |GET|`/api/payments`|
+|POST|`/api/payments`|
+|POST|`/api/payments/:id/reverse`|
 |GET|`/api/purchases`|
+|GET|`/api/refunds`|
 |GET|`/api/register`|
 |GET|`/api/reports`|
 |GET|`/api/reports/:type`|
+|GET|`/api/requirements`|
 |POST|`/api/restore`|
 |GET|`/api/search`|
 |GET|`/api/settings`|
