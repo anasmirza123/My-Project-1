@@ -1,175 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Garment MS | Dashboard</title>
-    <link rel="stylesheet" href="/style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Garment Management System</title>
+<link rel="stylesheet" href="/style.css">
 </head>
 <body>
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="brand">
-            <div class="brand-icon">👕</div>
-            <div>
-                <h1>Garment MS</h1>
-                <span>Local SQL Server</span>
-            </div>
-        </div>
-        
-        <nav class="menu">
-            <button class="nav-item active" data-tab="dashboard">📊 Dashboard</button>
-            <button class="nav-item" data-tab="customers">👥 Customers</button>
-            <button class="nav-item" data-tab="leads">📈 Leads & Inquiries</button>
-            <button class="nav-item" data-tab="products">📦 Products & Stock</button>
-            <button class="nav-item" data-tab="orders">🛒 Order Register</button>
-        </nav>
-        
-        <div class="sidebar-footer">
-            <div class="status-indicator">
-                <span class="dot"></span> SQL Server Connected
-            </div>
-        </div>
-    </aside>
+<div class="shell">
+  <aside class="rail">
+    <div class="brand">
+      <div class="mark">G</div>
+      <div><b id="brandName">Garment MS</b><small>WhatsApp customers, orders and stock</small></div>
+    </div>
+    <nav id="nav">
+      <a href="#/dashboard" data-view="dashboard">Dashboard</a>
+      <a href="#/chats" data-view="chats">Chats <span class="n" id="nChats"></span></a>
+      <a href="#/customers" data-view="customers">Customers</a>
+      <a href="#/orders" data-view="orders">Orders <span class="n" id="nOrders"></span></a>
+      <a href="#/products" data-view="products">Products and stock <span class="n warn" id="nLow"></span></a>
+      <a href="#/followups" data-view="followups">Follow-ups <span class="n warn" id="nFollow"></span></a>
+      <a href="#/settings" data-view="settings">Settings and backup</a>
+    </nav>
+    <div class="rail-foot">Saved on this computer in<br><code>data/db.json</code></div>
+  </aside>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <header class="topbar">
-            <div class="search-bar">
-                <input type="text" placeholder="Search customers, orders..." id="globalSearch">
-            </div>
-            <div class="topbar-actions">
-                <span id="currentDate"></span>
-            </div>
-        </header>
+  <div class="work">
+    <header class="bar">
+      <h1 id="title">Dashboard</h1>
+      <form id="quick" class="quick" autocomplete="off">
+        <input id="quickPhone" inputmode="tel" placeholder="Type a number, press Enter   ( / )" aria-label="Phone number">
+        <select id="quickType" aria-label="File the number as">
+          <option value="">Ask me the type</option>
+          <option value="wholesale">File as wholesale</option>
+          <option value="reseller">File as reseller</option>
+          <option value="retail">File as retail</option>
+          <option value="lead">File as lead</option>
+          <option value="no_response">File as no response</option>
+          <option value="other">File as other</option>
+        </select>
+        <button class="btn primary" type="submit">Save number</button>
+        <button class="btn" type="button" data-act="bulk">Paste many</button>
+      </form>
+    </header>
+    <main id="view"><div class="empty">Loading…</div></main>
+  </div>
+</div>
 
-        <!-- Dashboard Tab -->
-        <section id="tab-dashboard" class="tab-panel active">
-            <div class="page-header">
-                <h2>System Dashboard</h2>
-                <p>Overview of your garment business</p>
-            </div>
-
-            <div class="grid-cards" id="dashboardStats">
-                <!-- Stats injected by JS -->
-            </div>
-
-            <div class="card mt-4">
-                <h3>Quick Phone Intake</h3>
-                <p class="hint">Enter a phone number to instantly save and categorize a new customer.</p>
-                <form id="quickAddForm" class="flex-form">
-                    <input type="text" id="quickPhone" placeholder="e.g. 0300 1234567 or +92..." required>
-                    <select id="quickType" required>
-                        <option value="Wholesale">Wholesale</option>
-                        <option value="Reseller">Reseller</option>
-                        <option value="Retail">Retail</option>
-                        <option value="Unclassified">Unclassified</option>
-                    </select>
-                    <button type="submit" class="btn-primary">Submit & Save</button>
-                </form>
-                <div id="quickAddMsg" class="mt-2"></div>
-            </div>
-        </section>
-
-        <!-- Customers Tab -->
-        <section id="tab-customers" class="tab-panel">
-            <div class="page-header">
-                <h2>Customer Directory</h2>
-                <p>Manage your wholesale, reseller, and retail clients.</p>
-            </div>
-            <div class="card">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Phone Number</th>
-                            <th>Name</th>
-                            <th>Category</th>
-                            <th>Date Added</th>
-                        </tr>
-                    </thead>
-                    <tbody id="customerTableBody">
-                        <!-- Data injected by JS -->
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- Leads Tab -->
-        <section id="tab-leads" class="tab-panel">
-            <div class="page-header">
-                <h2>Leads & Inquiries</h2>
-                <p>Track active chats, no-responses, and lost sales.</p>
-            </div>
-            <div class="card">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Customer Phone</th>
-                            <th>Status</th>
-                            <th>Notes / Lost Reason</th>
-                        </tr>
-                    </thead>
-                    <tbody id="leadTableBody"></tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- Products Tab -->
-        <section id="tab-products" class="tab-panel">
-            <div class="page-header">
-                <h2>Products & Inventory</h2>
-                <p>Manage garment categories, variants, and stock.</p>
-            </div>
-            <div class="card mb-4">
-                <h3>Add New Product</h3>
-                <form id="productForm" class="flex-form">
-                    <input type="text" id="prodName" placeholder="Product Name (e.g., Tracksuit)" required>
-                    <input type="text" id="prodCat" placeholder="Category (e.g., Jackton)" required>
-                    <input type="number" id="prodPrice" placeholder="Price (PKR)" required>
-                    <input type="number" id="prodStock" placeholder="Initial Stock" required>
-                    <button type="submit" class="btn-primary">Add Product</button>
-                </form>
-            </div>
-            <div class="card">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Product Name</th>
-                            <th>Category</th>
-                            <th>Price</th>
-                            <th>Stock</th>
-                        </tr>
-                    </thead>
-                    <tbody id="productTableBody"></tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- Orders Tab -->
-        <section id="tab-orders" class="tab-panel">
-            <div class="page-header">
-                <h2>Order Register</h2>
-                <p>Track orders, payments, and tracking IDs.</p>
-            </div>
-            <div class="card">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Customer Phone</th>
-                            <th>Total Amount</th>
-                            <th>Paid</th>
-                            <th>Status</th>
-                            <th>Tracking ID</th>
-                        </tr>
-                    </thead>
-                    <tbody id="orderTableBody"></tbody>
-                </table>
-            </div>
-        </section>
-    </main>
-
-    <script src="/app.js"></script>
+<dialog id="drawer" class="drawer" aria-label="Customer"></dialog>
+<dialog id="dlg" class="dlg"></dialog>
+<script src="/app.js"></script>
 </body>
 </html>
