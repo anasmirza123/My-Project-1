@@ -7,48 +7,36 @@
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-<div class="shell">
-  <aside class="rail">
+<div class="app">
+  <aside class="sidebar">
     <div class="brand">
-      <div class="mark">G</div>
-      <div><b id="brandName">Garment MS</b><small>WhatsApp customers, orders and stock</small></div>
+      <div class="logo">G</div>
+      <div><b id="brandName">Garment MS</b><small>Customers, orders and stock</small></div>
     </div>
     <nav id="nav">
       <a href="#/dashboard" data-view="dashboard">Dashboard</a>
-      <a href="#/chats" data-view="chats">Chats <span class="n" id="nChats"></span></a>
-      <a href="#/customers" data-view="customers">Customers</a>
-      <a href="#/orders" data-view="orders">Orders <span class="n" id="nOrders"></span></a>
-      <a href="#/products" data-view="products">Products and stock <span class="n warn" id="nLow"></span></a>
-      <a href="#/followups" data-view="followups">Follow-ups <span class="n warn" id="nFollow"></span></a>
+      <a href="#/customers" data-view="customers">Customers <span class="count" id="navCustomers"></span></a>
+      <a href="#/orders" data-view="orders">Orders <span class="count" id="navOrders"></span></a>
+      <a href="#/products" data-view="products">Products and stock</a>
+      <a href="#/followups" data-view="followups">Follow-ups <span class="count warn" id="navFollow"></span></a>
+      <a href="#/stock" data-view="stock">Stock report</a>
       <a href="#/settings" data-view="settings">Settings and backup</a>
     </nav>
-    <div class="rail-foot">Saved on this computer in<br><code>data/db.json</code></div>
+    <div class="side-foot">Data is saved on this computer in <code>data/db.json</code></div>
   </aside>
 
-  <div class="work">
-    <header class="bar">
-      <h1 id="title">Dashboard</h1>
-      <form id="quick" class="quick" autocomplete="off">
-        <input id="quickPhone" inputmode="tel" placeholder="Type a number, press Enter   ( / )" aria-label="Phone number">
-        <select id="quickType" aria-label="File the number as">
-          <option value="">Ask me the type</option>
-          <option value="wholesale">File as wholesale</option>
-          <option value="reseller">File as reseller</option>
-          <option value="retail">File as retail</option>
-          <option value="lead">File as lead</option>
-          <option value="no_response">File as no response</option>
-          <option value="other">File as other</option>
-        </select>
+  <div class="main">
+    <header class="topbar">
+      <h1 id="pageTitle">Dashboard</h1>
+      <form id="intakeForm" class="intake" autocomplete="off">
+        <input id="intakePhone" placeholder="New chat? Type the phone number (03xx xxxxxxx or +92…)" inputmode="tel">
         <button class="btn primary" type="submit">Save number</button>
-        <button class="btn" type="button" data-act="bulk">Paste many</button>
       </form>
     </header>
     <main id="view"><div class="empty">Loading…</div></main>
   </div>
 </div>
-
-<dialog id="drawer" class="drawer" aria-label="Customer"></dialog>
-<dialog id="dlg" class="dlg"></dialog>
+<div id="toasts"></div>
 <script src="/app.js"></script>
 </body>
 </html>

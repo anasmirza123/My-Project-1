@@ -1,0 +1,9 @@
+{
+  "name": "garment-ms",
+  "version": "1.0.0",
+  "description": "Garment Management System - local customer, order and stock manager",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "private": true
+}
