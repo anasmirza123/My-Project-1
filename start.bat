@@ -1,14 +1,37 @@
 @echo off
 setlocal
-title Anas Management System
 cd /d "%~dp0"
-where node >nul 2>nul || (echo [ERROR] Node.js 18+ is required: https://nodejs.org/ & pause & exit /b 1)
-if not exist "node_modules\express" (
-  echo [SETUP] Installing dependencies ^(internet needed once^)...
-  call npm install || (echo [ERROR] npm install failed. & pause & exit /b 1)
+title Customer Manager (close this window to stop the app)
+
+where node >nul 2>nul
+if errorlevel 1 (
+  echo Node.js is not installed.
+  echo Download the LTS version from https://nodejs.org , install it, then run start.bat again.
+  pause
+  exit /b 1
 )
-netstat -ano | findstr /R /C:":3000 .*LISTENING" >nul && (echo [ERROR] Port 3000 is already in use - another copy of the app may be running. Close it first, then start again. & pause & exit /b 1)
-start "" /min cmd /c "node diagnose.js --wait-open"
-echo Starting at http://localhost:3000 - press Ctrl+C to stop.
-call npm start
+
+for /f %%v in ('node -p "+process.versions.node.split(/[.]/)[0]"') do set NODEMAJOR=%%v
+if %NODEMAJOR% LSS 22 (
+  echo Your Node.js is version %NODEMAJOR%. This app needs version 22 or newer.
+  echo Download the LTS version from https://nodejs.org , install it, then run start.bat again.
+  pause
+  exit /b 1
+)
+
+if not exist node_modules (
+  echo First run: installing components. This needs internet ONE time...
+  call npm install --omit=dev
+  if errorlevel 1 (
+    echo Install failed. Check your internet connection and try again.
+    pause
+    exit /b 1
+  )
+)
+
+echo Starting... your browser will open in a moment.
+start "" cmd /c "timeout /t 2 /nobreak >nul & start http://localhost:3000"
+node src\server.js
+echo.
+echo The app has stopped.
 pause
