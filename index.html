@@ -1,42 +1,48 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Garment Management System</title>
-<link rel="stylesheet" href="/style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Customer Manager</title>
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<div class="app">
-  <aside class="sidebar">
-    <div class="brand">
-      <div class="logo">G</div>
-      <div><b id="brandName">Garment MS</b><small>Customers, orders and stock</small></div>
-    </div>
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">Customer Manager</div>
     <nav id="nav">
-      <a href="#/dashboard" data-view="dashboard">Dashboard</a>
-      <a href="#/customers" data-view="customers">Customers <span class="count" id="navCustomers"></span></a>
-      <a href="#/orders" data-view="orders">Orders <span class="count" id="navOrders"></span></a>
-      <a href="#/products" data-view="products">Products and stock</a>
-      <a href="#/followups" data-view="followups">Follow-ups <span class="count warn" id="navFollow"></span></a>
-      <a href="#/stock" data-view="stock">Stock report</a>
-      <a href="#/settings" data-view="settings">Settings and backup</a>
+      <a href="#/" data-nav="dashboard">Dashboard</a>
+      <div class="nav-group">Customers</div>
+      <a href="#/customers?view=all" data-nav="customers:all">All Customers</a>
+      <a href="#/customers?view=wholesale" data-nav="customers:wholesale">Wholesale</a>
+      <a href="#/customers?view=retail" data-nav="customers:retail">Retail</a>
+      <a href="#/customers?view=leads" data-nav="customers:leads">Leads</a>
+      <a href="#/customers?view=previous" data-nav="customers:previous">Previous Customers</a>
+      <a href="#/customers?view=hardware" data-nav="customers:hardware">Hardware Requirements</a>
+      <a href="#/customers?view=uncategorized" data-nav="customers:uncategorized">Uncategorized</a>
+      <div class="nav-group">Orders</div>
+      <a href="#/orders?status=all" data-nav="orders:all">All Orders</a>
+      <a href="#/orders?status=draft" data-nav="orders:draft">Pending (Drafts)</a>
+      <a href="#/orders?status=confirmed" data-nav="orders:confirmed">In Progress</a>
+      <a href="#/orders?status=completed" data-nav="orders:completed">Completed Orders</a>
+      <div class="nav-group">System</div>
+      <a href="#/settings" data-nav="settings">Settings</a>
+      <a href="#/backup" data-nav="backup">Backup &amp; Restore</a>
     </nav>
-    <div class="side-foot">Data is saved on this computer in <code>data/db.json</code></div>
   </aside>
-
   <div class="main">
     <header class="topbar">
-      <h1 id="pageTitle">Dashboard</h1>
-      <form id="intakeForm" class="intake" autocomplete="off">
-        <input id="intakePhone" placeholder="New chat? Type the phone number (03xx xxxxxxx or +92…)" inputmode="tel">
-        <button class="btn primary" type="submit">Save number</button>
-      </form>
+      <button id="menuBtn" class="icon-btn" aria-label="Menu">&#9776;</button>
+      <div class="search">
+        <input id="globalSearch" type="search" placeholder="Search phone, name, tracking ID, product, order #..." autocomplete="off">
+        <div id="searchResults" class="search-results" hidden></div>
+      </div>
     </header>
-    <main id="view"><div class="empty">Loading…</div></main>
+    <main id="view" class="view" tabindex="-1"></main>
   </div>
 </div>
-<div id="toasts"></div>
-<script src="/app.js"></script>
+<div id="toasts" class="toasts" aria-live="polite"></div>
+<dialog id="dialog"></dialog>
+<script type="module" src="js/app.js"></script>
 </body>
 </html>
